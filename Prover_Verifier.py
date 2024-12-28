@@ -1,64 +1,65 @@
 import galois
-import random
+from galois import FieldArray
+import secrets
 from PRFs import hmac_prf
-from Helpers import get_blocks_authenticators_by_file_path, write_file_by_blocks_with_authenticators
+from helpers import get_blocks_authenticators_by_file_path, write_file_by_blocks_with_authenticators, secure_random_sample, bytes_needed
+from primes import PRIME_NUMBER_16_BYTES
 
-MAC_SIZE = 4
-
-p = 4294967311
+p: int = PRIME_NUMBER_16_BYTES
+MAC_SIZE: int = bytes_needed(p)
 
 # Create a finite field GF(p)
 GF = galois.GF(p)
 
-file_path = "PoR.pdf"  # Replace with your file path
-block_size = 1024
+file_path: str = "PoR.pdf"  # Replace with your file path
+BLOCK_SIZE: int = 1024
 
-k = random.randint(1, 100)  # TODO: Check what is the interval of values
-alpha = GF.Random()
+k: int = secrets.randbelow(100)  # TODO: Check what is the interval of values
+alpha: FieldArray = GF(secrets.randbelow(p))
 
 # To store blocks with appended authenticator
-blocks_with_authenticators = get_blocks_authenticators_by_file_path(file_path, alpha, block_size, k, p)
+blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path, alpha, BLOCK_SIZE, k, p, MAC_SIZE)
 
-output_file = "processed_with_gmac.txt"
+output_file: str = "processed_with_gmac.txt"
 
 write_file_by_blocks_with_authenticators(output_file, blocks_with_authenticators)
 
-n = len(blocks_with_authenticators)
-l = random.randint(0, n - 1)
+n: int = len(blocks_with_authenticators)
+l: int = secrets.randbelow(n)
 
 # Select random indices
-indices = random.sample(range(n), l)
-coefficients = [random.randint(1, p) for _ in range(l)]
+indices: list[int] = secure_random_sample(n, l)
+coefficients: list[int] = [(secrets.randbelow(p) + 1) for _ in range(l)]
 
-sigma = GF(0)
-mu = GF(0)
+sigma: FieldArray = GF(0)
+mu: FieldArray = GF(0)
 
 # Calculate the Sigma and mu
 with open(output_file, "rb") as f:
-    block_index = 0
+    block_index: int = 0
     while True:
         # Read the next block (data + authenticator)
-        full_block = f.read(block_size + MAC_SIZE)  # up-to 1024-byte data, 4-byte authenticator tag
+        full_block: bytes = f.read(BLOCK_SIZE + MAC_SIZE)  # up-to 1024-byte data, 4-byte authenticator tag
         if not full_block:
             break  # End of file
 
-        m_i = GF(int.from_bytes(full_block[:-MAC_SIZE], byteorder='big') % p)
-        sigma_i = GF(int.from_bytes(full_block[-MAC_SIZE:], byteorder='big') % p)
+        m_i: FieldArray = GF(int.from_bytes(full_block[:-MAC_SIZE], byteorder='big') % p)
+        sigma_i: FieldArray = GF(int.from_bytes(full_block[-MAC_SIZE:], byteorder='big') % p)
 
         if block_index in indices:
-            v_i = GF(coefficients[indices.index(block_index)] % p)
+            v_i: FieldArray = GF(coefficients[indices.index(block_index)] % p)
             sigma += v_i * sigma_i
             mu += v_i * m_i
 
         block_index += 1
 
 # Verify Sigma
-sum = GF(0)
+sum: FieldArray = GF(0)
 for i, coefficient in zip(indices, coefficients):
-    v_i = GF(coefficient % p)
-    f_k_i = GF(hmac_prf(k, i) % p)
+    v_i: FieldArray = GF(coefficient % p)
+    f_k_i: FieldArray = GF(hmac_prf(k, i) % p)
     sum += v_i * f_k_i
 
-maybe_sigma = alpha * mu + sum
+maybe_sigma: FieldArray = alpha * mu + sum
 
 print(sigma == maybe_sigma)
