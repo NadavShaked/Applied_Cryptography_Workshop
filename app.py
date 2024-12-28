@@ -26,6 +26,7 @@ def save_copy():
         except Exception as e:
             messagebox.showerror("Error", f"Failed to copy file: {e}")
 
+
 def generate_ecc():
     if not file_path_var.get():
         messagebox.showwarning("Warning", "Please select a file first.")
@@ -42,6 +43,7 @@ def generate_ecc():
             messagebox.showinfo("Success", f"ECC file generated: {ecc_file_path}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to generate ECC file: {e}")
+
 
 def decrypt_ecc():
     if not file_path_var.get():
@@ -60,14 +62,24 @@ def decrypt_ecc():
         except Exception as e:
             messagebox.showerror("Error", f"Failed to decrypt ECC file: {e}")
 
-# Function to update the center content based on the selected menu option
+
 def update_content(option):
+    # Update the selected option
+    selected_option.set(option)
+
     # Clear the current content in the center panel
     for widget in content_frame.winfo_children():
         widget.destroy()
 
+    # Update button colors based on the selected option
+    for child in nav_frame.winfo_children():
+        if isinstance(child, ttk.Button):
+            if child.cget("text") == option:
+                child.configure(style="Selected.TButton")  # Apply red style to the selected button
+            else:
+                child.configure(style="Rounded.TButton")  # Reset others to the default style
+
     if option == "Full Scan":
-        # Create widgets specific to Full Scan
         content_title = tk.Label(content_frame, text="Full Scan", font=("Helvetica", 18, "bold"), bg=content_background_color, fg="#000000")
         content_title.pack(pady=10)
 
@@ -97,7 +109,6 @@ def update_content(option):
         generate_ecc_button.pack(pady=10)
 
     elif option == "Antivirus":
-        # Create widgets specific to Antivirus
         content_title = tk.Label(content_frame, text="Antivirus", font=("Helvetica", 18, "bold"), bg=content_background_color, fg="#000000")
         content_title.pack(pady=10)
 
@@ -126,6 +137,7 @@ def update_content(option):
         decrypt_ecc_button = ttk.Button(content_frame, text="Decrypt ECC File", command=decrypt_ecc, style="Rounded.TButton")
         decrypt_ecc_button.pack(pady=10)
 
+
 # Create main window
 root = tk.Tk()
 root.title("Crypto Course")
@@ -133,9 +145,9 @@ root.geometry("800x500")
 root.resizable(False, False)
 
 # Styling
-nav_color = "#1c2c3c"  # Dark gray color for the navigation panel
-content_background_color = "#F5F5F5"  # Light white color for the content area
-button_color = "#3475df"  # Blue color for the buttons
+nav_color = "#1c2c3c"
+content_background_color = "#F5F5F5"
+button_color = "#3475df"
 text_color = "#FFFFFF"
 default_font = ("Helvetica", 12)
 
@@ -146,14 +158,19 @@ style.configure("TFrame", background=content_background_color)
 style.configure("TLabel", font=default_font, background=content_background_color, foreground=text_color)
 style.configure("TButton", font=default_font, padding=6, background=button_color, foreground=text_color, borderwidth=0, relief="flat")
 style.map("TButton",
+          background=[("active", nav_color), ("!disabled", nav_color)],
+          foreground=[("active", text_color), ("!disabled", text_color)])
+style.configure("Rounded.TButton", font=default_font, padding=10, background=button_color, foreground=text_color, borderwidth=0, relief="flat", border=10)
+style.configure("Selected.TButton", font=default_font, padding=10, background=nav_color, foreground=text_color, borderwidth=0, relief="flat", border=10)
+style.map("Selected.TButton",
           background=[("active", button_color), ("!disabled", button_color)],
           foreground=[("active", text_color), ("!disabled", text_color)])
 
-# Custom rounded button style for content buttons
-style.configure("Rounded.TButton", font=default_font, padding=10, background=button_color, foreground=text_color, borderwidth=0, relief="flat", border=10)
-
 # Variable to store selected file path
 file_path_var = tk.StringVar()
+
+# Variable to track selected option
+selected_option = tk.StringVar(value="Full Scan")
 
 # Main layout
 main_frame = ttk.Frame(root)
@@ -166,11 +183,11 @@ nav_frame.pack(side=tk.LEFT, fill=tk.Y)
 nav_label = tk.Label(nav_frame, text="Crypto Course", font=("Helvetica", 16, "bold"), bg=nav_color, fg=text_color, anchor="center")
 nav_label.pack(pady=20)
 
-# Menu options (These buttons will trigger the content update)
+# Menu options
 menu_options = ["Full Scan", "Antivirus"]
 for option in menu_options:
     btn = ttk.Button(nav_frame, text=option, command=lambda opt=option: update_content(opt))
-    btn.pack(fill=tk.X, padx=10, pady=5, ipadx=10)  # Stretch buttons across the width
+    btn.pack(fill=tk.X, pady=5, ipadx=10)  # Fill horizontally across the nav_frame
 
 # Right content panel
 content_frame = tk.Frame(main_frame, bg=content_background_color)
