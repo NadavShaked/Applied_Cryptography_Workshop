@@ -1,0 +1,26 @@
+# Byte-compiled files
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env/
+
+# PyCharm-specific files
+.idea/
+*.iml
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# System-specific files
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Cache files
+__pycache__/
