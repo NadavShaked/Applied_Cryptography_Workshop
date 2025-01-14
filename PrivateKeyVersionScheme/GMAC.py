@@ -111,8 +111,8 @@ def validate_file_with_gmac(file_path, key, block_size=1024):
 
 
 # Example usage
-file_path = "PoR.pdf"  # Replace with your file path
-output_file = "processed_with_gmac.txt"
+file_path = "../PoR.pdf"  # Replace with your file path
+output_file = "../processed_with_gmac.txt"
 block_size = 1024
 
 blocks_with_mac, key = process_file_with_gmac(file_path, block_size)
