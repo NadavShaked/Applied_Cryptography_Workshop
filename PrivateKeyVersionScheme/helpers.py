@@ -36,7 +36,7 @@ def get_blocks_authenticators_by_file_path(
 
     # Open the file for reading
     with open(file_path, "rb") as f:
-        GF: 'Type[FieldArray]' = galois.GF(p)
+        GF: Type[FieldArray] = galois.GF(p)
         block_index: int = 0
 
         while True:
@@ -47,11 +47,11 @@ def get_blocks_authenticators_by_file_path(
 
             f_k_i: FieldArray = GF(hmac_prf(k, block_index) % p)
             block_in_z_p: FieldArray = GF(int.from_bytes(block, byteorder='big') % p)
-            sigma_i: FieldArray = f_k_i + α * block_in_z_p  # the authenticator for block i
+            σ_i: FieldArray = f_k_i + α * block_in_z_p  # the authenticator for block i
 
-            sigma_i_in_bytes: bytes = galois_field_element_to_bytes(sigma_i, mac_size)
+            σ_i_in_bytes: bytes = galois_field_element_to_bytes(σ_i, mac_size)
 
-            blocks_with_authenticators.append((block, sigma_i_in_bytes))
+            blocks_with_authenticators.append((block, σ_i_in_bytes))
 
             block_index += 1
 
