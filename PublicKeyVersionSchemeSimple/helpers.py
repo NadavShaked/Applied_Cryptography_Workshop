@@ -1,16 +1,4 @@
-# from typing import Type
-# import secrets
-from typing import Type
-
-import galois
-from galois import FieldArray
-# from py_ecc.bls import G2ProofOfPossession as bls_pop
-# import py_ecc.bn128 as bls_opr
-import py_ecc.optimized_bls12_381 as bls_opt
-from hashlib import sha256
-# from py_ecc.fields import FQ
-import py_ecc.bls.hash_to_curve as bls_hash
-
+# Local imports
 from PrivateKeyVersionScheme.PRFs import hmac_prf
 
 p = 101

@@ -1,5 +1,7 @@
+# Standard library imports
 import secrets
 
+# Local imports
 from Common.helpers import secure_random_sample, write_file_by_blocks_with_authenticators
 from PrivateKeyVersionScheme.PRFs import hmac_prf
 from helpers import get_blocks_authenticators_by_file_path

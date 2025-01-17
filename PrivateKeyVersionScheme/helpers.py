@@ -1,8 +1,12 @@
-from PRFs import hmac_prf
+# Standard library imports
+from typing import Type
+
+# Third-party library imports
 import galois
 from galois import FieldArray
-import secrets
-from typing import Type
+
+# Local imports
+from PRFs import hmac_prf
 
 
 def galois_field_element_to_bytes(element: FieldArray, num_bytes: int) -> bytes:

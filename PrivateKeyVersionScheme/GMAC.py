@@ -1,5 +1,8 @@
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+# Standard library imports
 import os
+
+# Third-party library imports
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 
 NONCE_SIZE = 12

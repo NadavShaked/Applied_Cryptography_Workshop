@@ -1,10 +1,19 @@
+# Standard library imports
+import secrets
+
+# Third-party library imports
 import galois
 from galois import FieldArray
-import secrets
-from Common.helpers import bytes_needed, secure_random_sample, write_file_by_blocks_with_authenticators
+
+# Local imports
+from Common.helpers import (
+    bytes_needed,
+    secure_random_sample,
+    write_file_by_blocks_with_authenticators
+)
+from Common.primes import PRIME_NUMBER_16_BYTES
 from PRFs import hmac_prf
 from helpers import get_blocks_authenticators_by_file_path
-from Common.primes import PRIME_NUMBER_16_BYTES
 
 p: int = PRIME_NUMBER_16_BYTES
 MAC_SIZE: int = bytes_needed(p)

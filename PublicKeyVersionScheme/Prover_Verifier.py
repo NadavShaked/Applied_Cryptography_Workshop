@@ -1,16 +1,14 @@
-import galois
-from galois import FieldArray
+# Standard library imports
 import secrets
-
-from Common.helpers import secure_random_sample, bytes_needed, write_file_by_blocks_with_authenticators
-from helpers import get_blocks_authenticators_by_file_path, DST, HASH_INDEX_BYTES
-from Common.primes import PRIME_NUMBER_16_BYTES
-from py_ecc.bls import G2ProofOfPossession as bls_pop
-import py_ecc.optimized_bls12_381 as bls_opt
 from hashlib import sha256
+
+# Third-party library imports
 import py_ecc.bls.hash_to_curve as bls_hash
-from py_ecc.bls12_381.bls12_381_curve import curve_order
-from typing import Type
+import py_ecc.optimized_bls12_381 as bls_opt
+
+# Local imports
+from Common.helpers import secure_random_sample, write_file_by_blocks_with_authenticators
+from helpers import get_blocks_authenticators_by_file_path, DST, HASH_INDEX_BYTES
 
 
 p: int = bls_opt.curve_order    # 52435875175126190479447740508185965837690552500527637822603658699938581184513

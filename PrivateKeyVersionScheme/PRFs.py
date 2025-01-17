@@ -1,5 +1,7 @@
-import hmac
+# Standard library imports
 import hashlib
+import hmac
+
 
 SHA_256_BYTES_SIZE = 32
 
