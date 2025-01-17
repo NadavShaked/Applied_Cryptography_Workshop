@@ -24,30 +24,20 @@ def hash(index):
 
 
 def curve_field_element_to_bytes(point: int, num_bytes: int) -> bytes:
-    """
-    The curve satisfy the equation y^2 = x^3 + b
-    Convert a Galois Field (GF) element to its byte representation.
-
-    :param point: The Optimized bn128 FQ.
-    :param num_bytes: The desired length of the byte representation.
-    :return: A byte representation of the element in big-endian order.
-    """
     x_as_int: int = int(point)
     y_as_int: int = int(point)
     b_as_int: int = int(point)
 
     # Convert the integer to a byte array
-    return x_as_int.to_bytes(num_bytes, byteorder='big') + y_as_int.to_bytes(num_bytes,
-                                                                             byteorder='big') + b_as_int.to_bytes(
-        num_bytes, byteorder='big')
+    return x_as_int.to_bytes(num_bytes, byteorder='big') + y_as_int.to_bytes(num_bytes, byteorder='big') + b_as_int.to_bytes(num_bytes, byteorder='big')
 
 
 def get_blocks_authenticators_by_file_path(
         file_path: str,
         block_size: int,
-        p,
-        x,
-        u,
+        p: int,
+        x: int,
+        u: int,
         mac_size: int
 ) -> list[tuple[bytes, bytes]]:
     blocks_with_authenticators: list[tuple[bytes, bytes]] = []
@@ -70,11 +60,11 @@ def get_blocks_authenticators_by_file_path(
 
             H_i_add_u_m_i = add(H_i, u_m_i)  # H(i) * u^(m_i)
 
-            sigma_i = multiply(H_i_add_u_m_i, x)  # [H(i) * u^(m_i)]^x
+            σ_i = multiply(H_i_add_u_m_i, x)  # [H(i) * u^(m_i)]^x
 
-            sigma_i_in_bytes: bytes = curve_field_element_to_bytes(sigma_i, mac_size)
+            σ_i_in_bytes: bytes = curve_field_element_to_bytes(σ_i, mac_size)
 
-            blocks_with_authenticators.append((block, sigma_i_in_bytes))
+            blocks_with_authenticators.append((block, σ_i_in_bytes))
 
             block_index += 1
 

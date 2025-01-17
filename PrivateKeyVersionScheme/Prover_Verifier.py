@@ -26,10 +26,10 @@ file_path: str = "../Files/" + file_name
 BLOCK_SIZE: int = 1024
 
 k: int = secrets.randbelow(100)  # TODO: Check what is the interval of values
-alpha: FieldArray = GF(secrets.randbelow(p))
+α: FieldArray = GF(secrets.randbelow(p))
 
 # To store blocks with appended authenticator
-blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path, alpha, BLOCK_SIZE, k, p, MAC_SIZE)
+blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path, α, BLOCK_SIZE, k, p, MAC_SIZE)
 
 output_file: str = "./EncodedFiles/" + file_name + ".encoded.txt"
 
@@ -42,10 +42,10 @@ l: int = secrets.randbelow(n)   # todo: decide what is l - how many challenges t
 indices: list[int] = secure_random_sample(n, l)
 coefficients: list[int] = [secrets.randbelow(p) for _ in range(l)]
 
-sigma: FieldArray = GF(0)
-mu: FieldArray = GF(0)
+σ: FieldArray = GF(0)
+μ: FieldArray = GF(0)
 
-# Calculate the Sigma and mu
+# Calculate the σ and μ
 with open(output_file, "rb") as f:
     block_index: int = 0
     while True:
@@ -55,22 +55,22 @@ with open(output_file, "rb") as f:
             break  # End of file
 
         m_i: FieldArray = GF(int.from_bytes(full_block[:-MAC_SIZE], byteorder='big') % p)
-        sigma_i: FieldArray = GF(int.from_bytes(full_block[-MAC_SIZE:], byteorder='big') % p)
+        σ_i: FieldArray = GF(int.from_bytes(full_block[-MAC_SIZE:], byteorder='big') % p)
 
         if block_index in indices:
             v_i: FieldArray = GF(coefficients[indices.index(block_index)] % p)
-            sigma += v_i * sigma_i
-            mu += v_i * m_i
+            σ += v_i * σ_i
+            μ += v_i * m_i
 
         block_index += 1
 
-# Verify Sigma
-sum: FieldArray = GF(0)
+# Verify σ
+Σ: FieldArray = GF(0)
 for i, coefficient in zip(indices, coefficients):
     v_i: FieldArray = GF(coefficient % p)
     f_k_i: FieldArray = GF(hmac_prf(k, i) % p)
-    sum += v_i * f_k_i
+    Σ += v_i * f_k_i
 
-maybe_sigma: FieldArray = alpha * mu + sum
+calculated_σ_to_verify: FieldArray = α * μ + Σ
 
-print(sigma == maybe_sigma)
+print(σ == calculated_σ_to_verify)

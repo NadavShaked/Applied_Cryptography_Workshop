@@ -26,7 +26,7 @@ def galois_field_element_to_bytes(element: FieldArray, num_bytes: int) -> bytes:
 
 def get_blocks_authenticators_by_file_path(
         file_path: str,
-        alpha: FieldArray,
+        α: FieldArray,
         block_size: int,
         k: int,
         p: int,
@@ -47,7 +47,7 @@ def get_blocks_authenticators_by_file_path(
 
             f_k_i: FieldArray = GF(hmac_prf(k, block_index) % p)
             block_in_z_p: FieldArray = GF(int.from_bytes(block, byteorder='big') % p)
-            sigma_i: FieldArray = f_k_i + alpha * block_in_z_p  # the authenticator for block i
+            sigma_i: FieldArray = f_k_i + α * block_in_z_p  # the authenticator for block i
 
             sigma_i_in_bytes: bytes = galois_field_element_to_bytes(sigma_i, mac_size)
 

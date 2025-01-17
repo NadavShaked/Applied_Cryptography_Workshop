@@ -60,13 +60,13 @@ with open(output_file, "rb") as f:
         _3d_mac: bytes = full_block[-_3d_mac_size:]
         mac_x_coordinate: bytes = _3d_mac[0:MAC_SIZE]  # Bytes 0 - (MAC_SIZE - 1)
         mac_y_coordinate: bytes = _3d_mac[MAC_SIZE:2*MAC_SIZE]  # Bytes (MAC_SIZE) - (2 * MAC_SIZE - 1)
-        mac_b_coordinate: bytes = _3d_mac[2*MAC_SIZE:3*MAC_SIZE]  # Bytes (2 * MAC_SIZE) - (3 * MAC_SIZE - 1)
+        mac_z_coordinate: bytes = _3d_mac[2*MAC_SIZE:3*MAC_SIZE]  # Bytes (2 * MAC_SIZE) - (3 * MAC_SIZE - 1)
 
         mac_x_coordinate_as_int = int.from_bytes(mac_x_coordinate, byteorder='big')
         mac_y_coordinate_as_int = int.from_bytes(mac_y_coordinate, byteorder='big')
-        mac_b_coordinate_as_int = int.from_bytes(mac_b_coordinate, byteorder='big')
+        mac_z_coordinate_as_int = int.from_bytes(mac_z_coordinate, byteorder='big')
 
-        σ_i = (bls_opt.FQ(mac_x_coordinate_as_int), bls_opt.FQ(mac_y_coordinate_as_int), bls_opt.FQ(mac_b_coordinate_as_int))
+        σ_i = (bls_opt.FQ(mac_x_coordinate_as_int), bls_opt.FQ(mac_y_coordinate_as_int), bls_opt.FQ(mac_z_coordinate_as_int))
 
         if block_index in indices:
             v_i: int = coefficients[indices.index(block_index)]
@@ -83,7 +83,7 @@ with open(output_file, "rb") as f:
         block_index += 1
 
 
-# Verify σ
+# Verify pairing
 left_pairing = bls_opt.pairing(g, σ)   # e(σ, g)
 
 Π_H_i_multiply_v_i = None
@@ -101,8 +101,8 @@ for i, coefficient in zip(indices, coefficients):
 
 u_μ = bls_opt.multiply(u, μ)  # u^μ
 
-all = bls_opt.add(Π_H_i_multiply_v_i, u_μ)
+multiplication_sum = bls_opt.add(Π_H_i_multiply_v_i, u_μ)
 
-right_pairing = bls_opt.pairing(v, all)   # e(Π(H(i)^(v_i)) * u^μ, v)
+right_pairing = bls_opt.pairing(v, multiplication_sum)   # e(Π(H(i)^(v_i)) * u^μ, v)
 
 print(left_pairing.coeffs[0] == right_pairing.coeffs[0] and left_pairing.coeffs[1] == right_pairing.coeffs[1] and left_pairing.coeffs[2] == right_pairing.coeffs[2])
