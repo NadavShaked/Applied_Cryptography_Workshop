@@ -54,17 +54,6 @@ def get_blocks_authenticators_by_file_path(
     return blocks_with_authenticators
 
 
-# todo: same like the publicKey. extract to common
-def write_file_by_blocks_with_authenticators(output_file: str, blocks_with_authenticators: list[tuple[bytes, bytes]]) -> None:
-    # Write processed blocks with authenticator to a new file
-    with open(output_file, "wb") as out_f:
-        for block_with_authenticator in blocks_with_authenticators:
-            # Write data
-            out_f.write(block_with_authenticator[0])
-            # Write authenticator
-            out_f.write(block_with_authenticator[1])
-
-
 def is_prime(n: int) -> bool:
     """Check if a number is prime."""
     if n <= 1:

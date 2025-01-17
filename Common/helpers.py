@@ -40,3 +40,13 @@ def secure_random_sample(maxIndex: int, number_of_indices: int) -> list[int]:   
 
     # Return the first `l` items
     return indices[:number_of_indices]
+
+
+def write_file_by_blocks_with_authenticators(output_file: str, blocks_with_authenticators: list[tuple[bytes, bytes]]) -> None:
+    # Write processed blocks with authenticator to a new file
+    with open(output_file, "wb") as out_f:
+        for block_with_authenticator in blocks_with_authenticators:
+            # Write data
+            out_f.write(block_with_authenticator[0])
+            # Write authenticator
+            out_f.write(block_with_authenticator[1])

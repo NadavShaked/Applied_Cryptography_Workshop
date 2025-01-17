@@ -1,19 +1,30 @@
-import galois
-from galois import FieldArray
 import secrets
 
-from Common.helpers import secure_random_sample, bytes_needed, write_file_by_blocks_with_authenticators
-from helpers import get_blocks_authenticators_by_file_path, DST, HASH_INDEX_BYTES
-from Common.primes import PRIME_NUMBER_16_BYTES
-from py_ecc.bls import G2ProofOfPossession as bls_pop
-import py_ecc.optimized_bls12_381 as bls_opt
-from hashlib import sha256
-import py_ecc.bls.hash_to_curve as bls_hash
-from py_ecc.bls12_381.bls12_381_curve import curve_order
-from typing import Type
+from Common.helpers import secure_random_sample, write_file_by_blocks_with_authenticators
+from PrivateKeyVersionScheme.PRFs import hmac_prf
+from helpers import get_blocks_authenticators_by_file_path
 
 
-p: int = bls_opt.curve_order    # 52435875175126190479447740508185965837690552500527637822603658699938581184513
+def add(a, b):
+    """Perform addition in Z_p."""
+    return (a + b) % p
+
+
+def multiply(a, n):
+    """Perform scalar multiplication in Z_p."""
+    return (a * n) % p
+
+
+def pairing(a, b):
+    """Perform pairing operation in Z_p."""
+    return (a * b) % p
+
+
+def hash(index):
+    return hmac_prf(3, index) % p
+
+
+p: int = 101    # Todo: verify that the prime is correct
 MAC_SIZE: int = 128 # TODO: verify max int in G group
 
 file_name: str = "PoR.pdf"
@@ -22,12 +33,15 @@ BLOCK_SIZE: int = 1024
 
 x: int = secrets.randbelow(p)    # private key
 
+G1 = 13
+G2 = 7
+
 rand_value_1 = secrets.randbelow(p)
-g = bls_opt.multiply(bls_opt.G2, rand_value_1)
-v = bls_opt.multiply(g, x)  # v = g^x in G
+g = multiply(G2, rand_value_1)
+v = multiply(g, x)  # v = g^x in G
 
 rand_value_2 = secrets.randbelow(p)
-u = bls_opt.multiply(bls_opt.G1, rand_value_2)  # u in G
+u = multiply(G1, rand_value_2)  # u in G
 
 # To store blocks with appended authenticator
 blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path, BLOCK_SIZE, p, x, u, MAC_SIZE)
@@ -37,7 +51,7 @@ output_file: str = "./EncodedFiles/" + file_name + ".encoded.txt"
 write_file_by_blocks_with_authenticators(output_file, blocks_with_authenticators)
 
 n: int = len(blocks_with_authenticators)
-l: int = secrets.randbelow(n)   # todo: decide what is l - how many challenges the client sends
+l: int = 1  #secrets.randbelow(n)   # todo: decide what is l - how many challenges the client sends
 
 # Select random indices
 indices: list[int] = secure_random_sample(n, l)
@@ -68,16 +82,16 @@ with open(output_file, "rb") as f:
         mac_y_coordinate_as_int = int.from_bytes(mac_y_coordinate, byteorder='big')
         mac_b_coordinate_as_int = int.from_bytes(mac_b_coordinate, byteorder='big')
 
-        sigma_i = (bls_opt.FQ(mac_x_coordinate_as_int), bls_opt.FQ(mac_y_coordinate_as_int), bls_opt.FQ(mac_b_coordinate_as_int))
+        sigma_i = mac_x_coordinate_as_int   #(bls_opt.FQ(mac_x_coordinate_as_int), bls_opt.FQ(mac_y_coordinate_as_int), bls_opt.FQ(mac_b_coordinate_as_int))
 
         if block_index in indices:
             v_i: int = coefficients[indices.index(block_index)]
-            sigma_i_power_v_i = bls_opt.multiply(sigma_i, v_i)   # (sigma_i)^(v_i)
+            sigma_i_power_v_i = multiply(sigma_i, v_i)   # (sigma_i)^(v_i)
 
             if sigma is None:
                 sigma = sigma_i_power_v_i
             else:
-                sigma = bls_opt.add(sigma, sigma_i_power_v_i)
+                sigma = add(sigma, sigma_i_power_v_i)
 
             v_i_multiply_m_i = (v_i * m_i) % p
             mu = (mu + v_i_multiply_m_i) % p
@@ -86,25 +100,25 @@ with open(output_file, "rb") as f:
 
 
 # Verify Sigma
-pair1 = bls_opt.pairing(g, sigma)   # e(sigma, g)
+pair1 = pairing(g, sigma)   # e(sigma, g)
 
 py_H_i_multiply_v_i = None
 for i, coefficient in zip(indices, coefficients):
     v_i: int = coefficient
 
-    H_i = bls_hash.hash_to_G1(i.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256)  # H(i)
+    H_i = hash(i)  # H(i)
 
-    H_i_multiply_v_i = bls_opt.multiply(H_i, v_i)  # H(i)^(v_i)
+    H_i_multiply_v_i = multiply(H_i, v_i)  # H(i)^(v_i)
 
     if py_H_i_multiply_v_i is None:
         py_H_i_multiply_v_i = H_i_multiply_v_i
     else:
-        py_H_i_multiply_v_i = bls_opt.add(py_H_i_multiply_v_i, H_i_multiply_v_i)
+        py_H_i_multiply_v_i = add(py_H_i_multiply_v_i, H_i_multiply_v_i)
 
-u_mu = bls_opt.multiply(u, mu)  # u^mu
+u_mu = multiply(u, mu)  # u^mu
 
-all = bls_opt.add(py_H_i_multiply_v_i, u_mu)
+all = add(py_H_i_multiply_v_i, u_mu)
 
-pair2 = bls_opt.pairing(v, all)   # e(PY(H(i)^(v_i)) * u^mu, v)
+pair2 = pairing(v, all)   # e(PY(H(i)^(v_i)) * u^mu, v)
 
-print(pair1.coeffs[0] == pair2.coeffs[0] and pair1.coeffs[1] == pair2.coeffs[1] and pair1.coeffs[2] == pair2.coeffs[2])
+print(pair1 == pair2)

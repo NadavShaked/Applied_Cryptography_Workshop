@@ -1,9 +1,9 @@
 import galois
 from galois import FieldArray
 import secrets
-from Common.helpers import bytes_needed, secure_random_sample
+from Common.helpers import bytes_needed, secure_random_sample, write_file_by_blocks_with_authenticators
 from PRFs import hmac_prf
-from helpers import get_blocks_authenticators_by_file_path, write_file_by_blocks_with_authenticators
+from helpers import get_blocks_authenticators_by_file_path
 from Common.primes import PRIME_NUMBER_16_BYTES
 
 p: int = PRIME_NUMBER_16_BYTES
@@ -30,7 +30,7 @@ n: int = len(blocks_with_authenticators)
 l: int = secrets.randbelow(n)   # todo: decide what is l - how many challenges the client sends
 
 # Select random indices
-indices: list[int] = secure_random_sample(n, l) # TODO: validate that random as requested
+indices: list[int] = secure_random_sample(n, l)
 coefficients: list[int] = [secrets.randbelow(p) for _ in range(l)]
 
 sigma: FieldArray = GF(0)
