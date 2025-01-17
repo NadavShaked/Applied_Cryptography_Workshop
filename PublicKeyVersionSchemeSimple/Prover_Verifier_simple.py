@@ -3,31 +3,11 @@ import secrets
 
 # Local imports
 from Common.helpers import secure_random_sample, write_file_by_blocks_with_authenticators
-from PrivateKeyVersionScheme.PRFs import hmac_prf
-from helpers import get_blocks_authenticators_by_file_path
+from helpers import get_blocks_authenticators_by_file_path, add, multiply, hash, pairing
 
 
-def add(a, b):
-    """Perform addition in Z_p."""
-    return (a + b) % p
-
-
-def multiply(a, n):
-    """Perform scalar multiplication in Z_p."""
-    return (a * n) % p
-
-
-def pairing(a, b):
-    """Perform pairing operation in Z_p."""
-    return (a * b) % p
-
-
-def hash(index):
-    return hmac_prf(3, index) % p
-
-
-p: int = 101    # Todo: verify that the prime is correct
-MAC_SIZE: int = 128 # TODO: verify max int in G group
+p: int = 101
+MAC_SIZE: int = 128
 
 file_name: str = "PoR.pdf"
 file_path: str = "../Files/" + file_name  # Replace with your file path
@@ -53,7 +33,7 @@ output_file: str = "./EncodedFiles/" + file_name + ".encoded.txt"
 write_file_by_blocks_with_authenticators(output_file, blocks_with_authenticators)
 
 n: int = len(blocks_with_authenticators)
-l: int = 1  #secrets.randbelow(n)   # todo: decide what is l - how many challenges the client sends
+l: int = secrets.randbelow(n)   # todo: decide what is l - how many challenges the client sends
 
 # Select random indices
 indices: list[int] = secure_random_sample(n, l)

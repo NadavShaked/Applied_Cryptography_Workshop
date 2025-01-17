@@ -23,10 +23,7 @@ def hash(index):
     return hmac_prf(3, index) % p
 
 
-DST = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_"
-
-
-def curve_field_element_to_bytes(point: int, num_bytes: int) -> bytes:    #todo: type for tuple + rename the func and comments
+def curve_field_element_to_bytes(point: int, num_bytes: int) -> bytes:
     """
     The curve satisfy the equation y^2 = x^3 + b
     Convert a Galois Field (GF) element to its byte representation.
@@ -40,7 +37,9 @@ def curve_field_element_to_bytes(point: int, num_bytes: int) -> bytes:    #todo:
     b_as_int: int = int(point)
 
     # Convert the integer to a byte array
-    return x_as_int.to_bytes(num_bytes, byteorder='big') + y_as_int.to_bytes(num_bytes, byteorder='big') + b_as_int.to_bytes(num_bytes, byteorder='big')
+    return x_as_int.to_bytes(num_bytes, byteorder='big') + y_as_int.to_bytes(num_bytes,
+                                                                             byteorder='big') + b_as_int.to_bytes(
+        num_bytes, byteorder='big')
 
 
 def get_blocks_authenticators_by_file_path(
@@ -67,9 +66,9 @@ def get_blocks_authenticators_by_file_path(
 
             u_m_i = multiply(u, block_in_z_p)
 
-            H_i = hash(block_index) # H(i)  #todo: maybe not convert to string
+            H_i = hash(block_index)  # H(i)
 
-            H_i_add_u_m_i = add(H_i, u_m_i) # H(i) * u^(m_i)
+            H_i_add_u_m_i = add(H_i, u_m_i)  # H(i) * u^(m_i)
 
             sigma_i = multiply(H_i_add_u_m_i, x)  # [H(i) * u^(m_i)]^x
 

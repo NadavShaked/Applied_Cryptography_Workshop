@@ -5,12 +5,12 @@ from hashlib import sha256
 import py_ecc.bls.hash_to_curve as bls_hash
 import py_ecc.optimized_bls12_381 as bls_opt
 
-
 HASH_INDEX_BYTES = 32
 DST = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_"
 
 
-def curve_field_element_to_bytes(point: tuple, num_bytes: int) -> bytes:    #todo: type for tuple + rename the func and comments
+def curve_field_element_to_bytes(point: tuple,
+                                 num_bytes: int) -> bytes:  # todo: type for tuple + rename the func and comments
     """
     The curve satisfy the equation y^2 = x^3 + b
     Convert a Galois Field (GF) element to its byte representation.
@@ -24,7 +24,9 @@ def curve_field_element_to_bytes(point: tuple, num_bytes: int) -> bytes:    #tod
     b_as_int: int = int(point[2])
 
     # Convert the integer to a byte array
-    return x_as_int.to_bytes(num_bytes, byteorder='big') + y_as_int.to_bytes(num_bytes, byteorder='big') + b_as_int.to_bytes(num_bytes, byteorder='big')
+    return x_as_int.to_bytes(num_bytes, byteorder='big') + y_as_int.to_bytes(num_bytes,
+                                                                             byteorder='big') + b_as_int.to_bytes(
+        num_bytes, byteorder='big')
 
 
 def get_blocks_authenticators_by_file_path(
@@ -51,9 +53,9 @@ def get_blocks_authenticators_by_file_path(
 
             u_m_i = bls_opt.multiply(u, block_in_z_p)
 
-            H_i = bls_hash.hash_to_G1(block_index.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256) # H(i)  #todo: maybe not convert to string
+            H_i = bls_hash.hash_to_G1(block_index.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256)  # H(i)
 
-            H_i_add_u_m_i = bls_opt.add(H_i, u_m_i) # H(i) * u^(m_i)
+            H_i_add_u_m_i = bls_opt.add(H_i, u_m_i)  # H(i) * u^(m_i)
 
             sigma_i = bls_opt.multiply(H_i_add_u_m_i, x)  # [H(i) * u^(m_i)]^x
 
