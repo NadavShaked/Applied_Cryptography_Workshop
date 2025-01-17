@@ -10,7 +10,7 @@ p: int = 101
 MAC_SIZE: int = 128
 
 file_name: str = "PoR.pdf"
-file_path: str = "../Files/" + file_name  # Replace with your file path
+file_path: str = "../Files/" + file_name
 BLOCK_SIZE: int = 1024
 
 x: int = secrets.randbelow(p)    # private key

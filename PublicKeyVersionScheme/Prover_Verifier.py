@@ -15,17 +15,17 @@ p: int = bls_opt.curve_order    # 5243587517512619047944774050818596583769055250
 MAC_SIZE: int = 128 # TODO: verify max int in G group
 
 file_name: str = "PoR.pdf"
-file_path: str = "../Files/" + file_name  # Replace with your file path
+file_path: str = "../Files/" + file_name
 BLOCK_SIZE: int = 1024
 
 x: int = secrets.randbelow(p)    # private key
 
 rand_value_1 = secrets.randbelow(p)
 g = bls_opt.multiply(bls_opt.G2, rand_value_1)
-v = bls_opt.multiply(g, x)  # v = g^x in G
+v = bls_opt.multiply(g, x)  # v = g^x in G2
 
 rand_value_2 = secrets.randbelow(p)
-u = bls_opt.multiply(bls_opt.G1, rand_value_2)  # u in G
+u = bls_opt.multiply(bls_opt.G1, rand_value_2)  # u in G1
 
 # To store blocks with appended authenticator
 blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path, BLOCK_SIZE, p, x, u, MAC_SIZE)
@@ -41,10 +41,10 @@ l: int = secrets.randbelow(n)   # todo: decide what is l - how many challenges t
 indices: list[int] = secure_random_sample(n, l)
 coefficients: list[int] = [secrets.randbelow(p) for _ in range(l)]
 
-sigma = None
-mu: int = 0
+σ = None
+μ: int = 0
 
-# Calculate the Sigma and mu
+# Calculate the σ and μ
 with open(output_file, "rb") as f:
     block_index: int = 0
     _3d_mac_size = MAC_SIZE * 3
@@ -66,27 +66,27 @@ with open(output_file, "rb") as f:
         mac_y_coordinate_as_int = int.from_bytes(mac_y_coordinate, byteorder='big')
         mac_b_coordinate_as_int = int.from_bytes(mac_b_coordinate, byteorder='big')
 
-        sigma_i = (bls_opt.FQ(mac_x_coordinate_as_int), bls_opt.FQ(mac_y_coordinate_as_int), bls_opt.FQ(mac_b_coordinate_as_int))
+        σ_i = (bls_opt.FQ(mac_x_coordinate_as_int), bls_opt.FQ(mac_y_coordinate_as_int), bls_opt.FQ(mac_b_coordinate_as_int))
 
         if block_index in indices:
             v_i: int = coefficients[indices.index(block_index)]
-            sigma_i_power_v_i = bls_opt.multiply(sigma_i, v_i)   # (sigma_i)^(v_i)
+            σ_i_power_v_i = bls_opt.multiply(σ_i, v_i)   # (σ_i)^(v_i)
 
-            if sigma is None:
-                sigma = sigma_i_power_v_i
+            if σ is None:
+                σ = σ_i_power_v_i
             else:
-                sigma = bls_opt.add(sigma, sigma_i_power_v_i)
+                σ = bls_opt.add(σ, σ_i_power_v_i)
 
             v_i_multiply_m_i = (v_i * m_i) % p
-            mu = (mu + v_i_multiply_m_i) % p
+            μ = (μ + v_i_multiply_m_i) % p
 
         block_index += 1
 
 
-# Verify Sigma
-pair1 = bls_opt.pairing(g, sigma)   # e(sigma, g)
+# Verify σ
+left_pairing = bls_opt.pairing(g, σ)   # e(σ, g)
 
-py_H_i_multiply_v_i = None
+Π_H_i_multiply_v_i = None
 for i, coefficient in zip(indices, coefficients):
     v_i: int = coefficient
 
@@ -94,15 +94,15 @@ for i, coefficient in zip(indices, coefficients):
 
     H_i_multiply_v_i = bls_opt.multiply(H_i, v_i)  # H(i)^(v_i)
 
-    if py_H_i_multiply_v_i is None:
-        py_H_i_multiply_v_i = H_i_multiply_v_i
+    if Π_H_i_multiply_v_i is None:
+        Π_H_i_multiply_v_i = H_i_multiply_v_i
     else:
-        py_H_i_multiply_v_i = bls_opt.add(py_H_i_multiply_v_i, H_i_multiply_v_i)
+        Π_H_i_multiply_v_i = bls_opt.add(Π_H_i_multiply_v_i, H_i_multiply_v_i)
 
-u_mu = bls_opt.multiply(u, mu)  # u^mu
+u_μ = bls_opt.multiply(u, μ)  # u^μ
 
-all = bls_opt.add(py_H_i_multiply_v_i, u_mu)
+all = bls_opt.add(Π_H_i_multiply_v_i, u_μ)
 
-pair2 = bls_opt.pairing(v, all)   # e(PY(H(i)^(v_i)) * u^mu, v)
+right_pairing = bls_opt.pairing(v, all)   # e(Π(H(i)^(v_i)) * u^μ, v)
 
-print(pair1.coeffs[0] == pair2.coeffs[0] and pair1.coeffs[1] == pair2.coeffs[1] and pair1.coeffs[2] == pair2.coeffs[2])
+print(left_pairing.coeffs[0] == right_pairing.coeffs[0] and left_pairing.coeffs[1] == right_pairing.coeffs[1] and left_pairing.coeffs[2] == right_pairing.coeffs[2])

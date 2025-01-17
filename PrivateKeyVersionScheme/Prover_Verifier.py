@@ -22,7 +22,7 @@ MAC_SIZE: int = bytes_needed(p)
 GF = galois.GF(p)
 
 file_name: str = "PoR.pdf"
-file_path: str = "../Files/" + file_name  # Replace with your file path
+file_path: str = "../Files/" + file_name
 BLOCK_SIZE: int = 1024
 
 k: int = secrets.randbelow(100)  # TODO: Check what is the interval of values

@@ -9,9 +9,9 @@ NONCE_SIZE = 12
 GMAC_SIZE = 16
 
 
-def convert_index_to_bytes(index: int, max_bytes_size: int = 16):
+def convert_index_to_bytes(index: int, max_bytes_size: int = 32):
     """
-    Converts a index into bytes with a specified maximum byte size.
+    Converts an index into bytes with a specified maximum byte size.
 
     Args:
     - index (int): The index to convert.
@@ -20,7 +20,7 @@ def convert_index_to_bytes(index: int, max_bytes_size: int = 16):
     Returns:
     - bytes: The index as bytes, fitting within the specified byte size.
     """
-    index_in_bytes = index.to_bytes(max_bytes_size, byteorder='big') # TODO: Check what is the maximum blocks, to set the maximum bytes size, 16
+    index_in_bytes = index.to_bytes(max_bytes_size, byteorder='big')
 
     return index_in_bytes
 
@@ -50,7 +50,7 @@ def process_file_with_gmac(file_path, block_size=1024):
             block_with_number = block + block_number_bytes
 
             # Generate GMAC (encrypt empty plaintext with block as AAD)
-            gmac_tag = aesgcm.encrypt(nonce, b"", block_with_number) #TODO: validate that the append index is correct here
+            gmac_tag = aesgcm.encrypt(nonce, b"", block_with_number)
 
             # Append GMAC to the block
             block_with_mac = block + gmac_tag
@@ -67,7 +67,7 @@ def write_blocks_to_file(blocks_with_mac, output_file):
     with open(output_file, "wb") as out_f:
         for _, nonce, block_with_mac in blocks_with_mac:
             # Write nonce (12 bytes), block, and its GMAC
-            out_f.write(nonce + block_with_mac) #TODO: What does it mean that we append the nonce at the beginning of the block
+            out_f.write(nonce + block_with_mac)
 
 
 def validate_block_with_gmac(block: bytes, block_index: int, key):
@@ -114,7 +114,7 @@ def validate_file_with_gmac(file_path, key, block_size=1024):
 
 
 # Example usage
-file_path = "../PoR.pdf"  # Replace with your file path
+file_path = "../PoR.pdf"
 output_file = "../processed_with_gmac.txt"
 block_size = 1024
 
