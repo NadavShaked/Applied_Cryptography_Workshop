@@ -2,11 +2,12 @@
 import secrets
 
 # Local imports
+from Common.primes import LOW_PRIME
 from Common.helpers import secure_random_sample, write_file_by_blocks_with_authenticators
 from helpers import get_blocks_authenticators_by_file_path, add, multiply, hash, pairing
 
 
-p: int = 101
+p: int = LOW_PRIME
 MAC_SIZE: int = 128
 
 file_name: str = "PoR.pdf"
