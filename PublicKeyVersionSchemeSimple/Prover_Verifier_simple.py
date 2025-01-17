@@ -65,7 +65,7 @@ with open(output_file, "rb") as f:
         mac_y_coordinate_as_int = int.from_bytes(mac_y_coordinate, byteorder='big')
         mac_b_coordinate_as_int = int.from_bytes(mac_b_coordinate, byteorder='big')
 
-        σ_i = mac_x_coordinate_as_int   #(bls_opt.FQ(mac_x_coordinate_as_int), bls_opt.FQ(mac_y_coordinate_as_int), bls_opt.FQ(mac_b_coordinate_as_int))
+        σ_i = mac_x_coordinate_as_int
 
         if block_index in indices:
             v_i: int = coefficients[indices.index(block_index)]

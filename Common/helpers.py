@@ -27,7 +27,7 @@ def bytes_needed(number: int) -> int:
     return power_of_two_bytes
 
 
-def secure_random_sample(maxIndex: int, number_of_indices: int) -> list[int]:   # todo: validate that the same index doesnt return twice
+def secure_random_sample(maxIndex: int, number_of_indices: int) -> list[int]:
     if number_of_indices > maxIndex:
         raise ValueError("Sample size l cannot be larger than the range n.")
 
