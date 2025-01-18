@@ -11,7 +11,7 @@ from Common.helpers import secure_random_sample, write_file_by_blocks_with_authe
 from helpers import get_blocks_authenticators_by_file_path, DST, HASH_INDEX_BYTES
 
 
-p: int = bls_opt.curve_order    # The curve order us 52435875175126190479447740508185965837690552500527637822603658699938581184513
+p: int = bls_opt.curve_order    # The curve order is 52435875175126190479447740508185965837690552500527637822603658699938581184513
 MAC_SIZE: int = 128 # TODO: verify max int in G group
 
 file_name: str = "PoR.pdf"
