@@ -5,6 +5,8 @@ from hashlib import sha256
 # Third-party library imports
 import py_ecc.bls.hash_to_curve as bls_hash
 import py_ecc.optimized_bls12_381 as bls_opt
+import py_ecc.bls.point_compression as bls_comp
+import requests as requests
 
 # Local imports
 from Common.helpers import secure_random_sample, write_file_by_blocks_with_authenticators
@@ -106,3 +108,32 @@ multiplication_sum = bls_opt.add(Π_H_i_multiply_v_i, u_μ)
 right_pairing = bls_opt.pairing(v, multiplication_sum)   # e(Π(H(i)^(v_i)) * u^μ, v)
 
 print(left_pairing.coeffs[0] == right_pairing.coeffs[0] and left_pairing.coeffs[1] == right_pairing.coeffs[1] and left_pairing.coeffs[2] == right_pairing.coeffs[2])
+
+g_comp = bls_comp.compress_G2(g)
+σ_comp = bls_comp.compress_G1(σ)
+v_comp = bls_comp.compress_G2(v)
+multiplication_sum_comp = bls_comp.compress_G1(multiplication_sum)
+
+g_comp_as_bytes = g_comp[0].to_bytes(48, 'big') + g_comp[1].to_bytes(48, 'big')
+σ_comp_as_bytes = σ_comp.to_bytes(48, 'big')
+v_comp_as_bytes = v_comp[0].to_bytes(48, 'big') + v_comp[1].to_bytes(48, 'big')
+multiplication_sum_comp_as_bytes = multiplication_sum_comp.to_bytes(48, 'big')
+
+# Create the JSON payload
+payload = {
+    "g_compressed": g_comp_as_bytes.hex(),
+    "sigma_compressed": σ_comp_as_bytes.hex(),
+    "v_compressed": v_comp_as_bytes.hex(),
+    "multiplication_sum_compressed": multiplication_sum_comp_as_bytes.hex(),
+}
+
+# API endpoint
+url = "http://127.0.0.1:3030/verify"
+
+# Send the POST request
+try:
+    response = requests.post(url, json=payload)
+    response.raise_for_status()
+    print("Response:", response.json())
+except requests.exceptions.RequestException as e:
+    print("An error occurred:", e)
