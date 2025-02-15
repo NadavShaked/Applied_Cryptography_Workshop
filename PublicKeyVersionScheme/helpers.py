@@ -1,13 +1,43 @@
 # Standard library imports
+import secrets
 from hashlib import sha256
 
 # Third-party library imports
 import py_ecc.bls.hash_to_curve as bls_hash
 from py_ecc.fields import optimized_bls12_381_FQ
 import py_ecc.optimized_bls12_381 as bls_opt
+import py_ecc.bls.point_compression as bls_comp
+
+MAC_SIZE: int = 128 # TODO: verify max int in G group
+BLOCK_SIZE: int = 1024
+
+p: int = bls_opt.curve_order    # The curve order is 52435875175126190479447740508185965837690552500527637822603658699938581184513
+
 
 HASH_INDEX_BYTES = 32
 DST = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_"
+
+
+def generate_x() -> int:
+    x: int = secrets.randbelow(p)  # private key
+    return x
+
+
+def generate_g() -> int:
+    rand_value = secrets.randbelow(p)
+    g = bls_opt.multiply(bls_opt.G2, rand_value)
+    return g
+
+
+def generate_v(g, x: int):
+    v = bls_opt.multiply(g, x)  # v = g^x in G2
+    return v
+
+
+def generate_u():
+    rand_value = secrets.randbelow(p)
+    u = bls_opt.multiply(bls_opt.G1, rand_value)  # u in G1
+    return u
 
 
 def curve_field_element_to_bytes(
@@ -89,3 +119,15 @@ def get_blocks_authenticators_by_file_path(
             block_index += 1
 
     return blocks_with_authenticators
+
+
+def compress_g1_to_hex(g1_point) -> str:
+    g1_comp = bls_comp.compress_G1(g1_point)
+    g1_comp_as_bytes = g1_comp.to_bytes(48, 'big')
+    return g1_comp_as_bytes.hex()
+
+
+def compress_g2_to_hex(g2_point) -> str:
+    g2_comp = bls_comp.compress_G2(g2_point)
+    g2_comp_as_bytes = g2_comp[0].to_bytes(48, 'big') + g2_comp[1].to_bytes(48, 'big')
+    return g2_comp_as_bytes.hex()

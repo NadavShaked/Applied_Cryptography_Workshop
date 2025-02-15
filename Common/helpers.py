@@ -51,3 +51,11 @@ def write_file_by_blocks_with_authenticators(output_file: str, blocks_with_authe
             out_f.write(block_with_authenticator[0])
             # Write authenticator
             out_f.write(block_with_authenticator[1])
+
+
+def write_file_by_blocks(output_file: str, blocks: list[bytes]) -> None:
+    # Write processed blocks to a new file
+    with open(output_file, "wb") as out_f:
+        for block in blocks:
+            # Write data
+            out_f.write(block)
