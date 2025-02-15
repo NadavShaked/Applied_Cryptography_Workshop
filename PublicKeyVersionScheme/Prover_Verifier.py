@@ -113,6 +113,7 @@ g_comp_as_bytes = g_comp[0].to_bytes(48, 'big') + g_comp[1].to_bytes(48, 'big')
 v_comp_as_bytes = v_comp[0].to_bytes(48, 'big') + v_comp[1].to_bytes(48, 'big')
 multiplication_sum_comp_as_bytes = multiplication_sum_comp.to_bytes(48, 'big')
 
+# todo: delete the request
 # Create the JSON payload
 payload = {
     "g_compressed": compress_g2_to_hex(g),

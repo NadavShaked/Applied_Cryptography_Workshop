@@ -163,7 +163,7 @@ def update_content(option):
 
         content_description = tk.Label(
             content_frame,
-            text="Scan and remove potential threats from your system.",
+            text="Perform a full decryption.",
             wraplength=400,
             justify="center",
             bg=content_background_color,
