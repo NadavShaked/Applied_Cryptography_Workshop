@@ -1,8 +1,10 @@
-use bls12_381::{pairing, G1Affine, G2Affine};
+use bls12_381::{pairing, G1Affine, G2Affine, hash_to_curve, G1Projective};
+use bls12_381::hash_to_curve::{ExpandMsgXmd, HashToCurve};
 use serde::{Deserialize, Serialize};
 use serde::de::{Deserializer, Error as DeError};
 use serde::ser::Serializer;
 use warp::Filter;
+use sha2::Sha256;
 
 #[derive(Debug)]
 struct HexArray<const N: usize>([u8; N]);
@@ -88,8 +90,36 @@ impl RequestPayload {
     }
 }
 
+fn convert_u128_to_32_bytes(i: u128) -> [u8; 32] {
+    let mut bytes = [0u8; 32];  // Create a 32-byte array, initially all zeros
+
+    // Convert the u128 into bytes (16 bytes) and place it in the last 16 bytes of the array
+    bytes[16..32].copy_from_slice(&i.to_be_bytes());  // Using big-endian format
+
+    bytes
+}
+
+fn perform_hash_to_curve(i: u128, dst: &[u8]) -> G1Affine {
+    // Convert u128 to 32-byte array
+    let msg = convert_u128_to_32_bytes(i);
+
+    // Perform hash-to-curve
+    let g = <G1Projective as HashToCurve<ExpandMsgXmd<Sha256>>>::hash_to_curve(&msg, dst);
+
+    // Convert from G1Projective to G1Affine
+    G1Affine::from(&g)
+}
+
 #[tokio::main]
 async fn main() {
+    let dst = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_";
+
+    // Convert i to bytes
+
+    let y = perform_hash_to_curve(6, dst);
+    let u = y.to_compressed();
+    println!("Compressed Y: {}", hex::encode(u));
+
     let verify = warp::path("verify")
         .and(warp::post())
         .and(warp::body::json())
