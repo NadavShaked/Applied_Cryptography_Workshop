@@ -10,24 +10,18 @@ import requests as requests
 
 # Local imports
 from Common.helpers import secure_random_sample, write_file_by_blocks_with_authenticators
-from helpers import get_blocks_authenticators_by_file_path, DST, HASH_INDEX_BYTES
-
-
-p: int = bls_opt.curve_order    # The curve order is 52435875175126190479447740508185965837690552500527637822603658699938581184513
-MAC_SIZE: int = 128 # TODO: verify max int in G group
+from helpers import get_blocks_authenticators_by_file_path, DST, HASH_INDEX_BYTES, p, MAC_SIZE, BLOCK_SIZE, generate_x, \
+    generate_g, generate_v, generate_u, compress_g1_to_hex, compress_g2_to_hex
 
 file_name: str = "PoR.pdf"
 file_path: str = "../Files/" + file_name
-BLOCK_SIZE: int = 1024
 
-x: int = secrets.randbelow(p)    # private key
+x: int = generate_x()    # private key
 
-rand_value_1 = secrets.randbelow(p)
-g = bls_opt.multiply(bls_opt.G2, rand_value_1)
-v = bls_opt.multiply(g, x)  # v = g^x in G2
+g = generate_g()
+v = generate_v(g, x)  # v = g^x in G2
 
-rand_value_2 = secrets.randbelow(p)
-u = bls_opt.multiply(bls_opt.G1, rand_value_2)  # u in G1
+u = generate_u()  # u in G1
 
 # To store blocks with appended authenticator
 blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path, BLOCK_SIZE, p, x, u, MAC_SIZE)
@@ -119,12 +113,13 @@ g_comp_as_bytes = g_comp[0].to_bytes(48, 'big') + g_comp[1].to_bytes(48, 'big')
 v_comp_as_bytes = v_comp[0].to_bytes(48, 'big') + v_comp[1].to_bytes(48, 'big')
 multiplication_sum_comp_as_bytes = multiplication_sum_comp.to_bytes(48, 'big')
 
+# todo: delete the request
 # Create the JSON payload
 payload = {
-    "g_compressed": g_comp_as_bytes.hex(),
-    "sigma_compressed": σ_comp_as_bytes.hex(),
-    "v_compressed": v_comp_as_bytes.hex(),
-    "multiplication_sum_compressed": multiplication_sum_comp_as_bytes.hex(),
+    "g_compressed": compress_g2_to_hex(g),
+    "sigma_compressed": compress_g1_to_hex(σ),
+    "v_compressed": compress_g2_to_hex(v),
+    "multiplication_sum_compressed": compress_g1_to_hex(multiplication_sum),
 }
 
 # API endpoint

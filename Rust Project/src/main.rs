@@ -1,3 +1,4 @@
+use std::ops::Add;
 use bls12_381::{pairing, G1Affine, G2Affine, hash_to_curve, G1Projective};
 use bls12_381::hash_to_curve::{ExpandMsgXmd, HashToCurve};
 use serde::{Deserialize, Serialize};
@@ -99,7 +100,9 @@ fn convert_u128_to_32_bytes(i: u128) -> [u8; 32] {
     bytes
 }
 
-fn perform_hash_to_curve(i: u128, dst: &[u8]) -> G1Affine {
+fn perform_hash_to_curve(i: u128) -> G1Affine {
+    let dst = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_";
+
     // Convert u128 to 32-byte array
     let msg = convert_u128_to_32_bytes(i);
 
@@ -112,11 +115,9 @@ fn perform_hash_to_curve(i: u128, dst: &[u8]) -> G1Affine {
 
 #[tokio::main]
 async fn main() {
-    let dst = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_";
-
-    // Convert i to bytes
-
-    let y = perform_hash_to_curve(6, dst);
+    let y = perform_hash_to_curve(6);
+    // y.add()
+    // y.mul()
     let u = y.to_compressed();
     println!("Compressed Y: {}", hex::encode(u));
 
