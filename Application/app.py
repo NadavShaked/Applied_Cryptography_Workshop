@@ -12,6 +12,8 @@ from PublicKeyVersionScheme.helpers import get_blocks_authenticators_by_file_pat
     generate_g, generate_v, generate_u, compress_g2_to_hex, compress_g1_to_hex
 from Common.helpers import write_file_by_blocks_with_authenticators, write_file_by_blocks
 
+global output_text
+
 
 class Page(Enum):
     ENCODING = "Encoding"
@@ -117,6 +119,27 @@ def decode_ecc_file():
             messagebox.showerror("Error", f"Failed to copy file: {e}")
 
 
+def start_subscription():
+    output_text.config(state=tk.NORMAL)
+    output_text.delete("1.0", tk.END)
+    output_text.insert(tk.END, f"{my_public_key_var.get()}\n")
+    output_text.config(state=tk.DISABLED)
+
+
+def add_funds_to_subscription():
+    output_text.config(state=tk.NORMAL)
+    output_text.delete("1.0", tk.END)
+    output_text.insert(tk.END, f"{my_public_key_var.get()}\n{escrow_public_key_var.get()}\n")
+    output_text.config(state=tk.DISABLED)
+
+
+def end_subscription():
+    output_text.config(state=tk.NORMAL)
+    output_text.delete("1.0", tk.END)
+    output_text.insert(tk.END, "Success\n")
+    output_text.config(state=tk.DISABLED)
+
+
 def update_content(option):
     # Update the selected option
     selected_option.set(option)
@@ -159,7 +182,6 @@ def update_content(option):
         save_copy_button = ttk.Button(content_frame, text="Generate ECC File", command=generate_ecc_file, style="Rounded.TButton")
         save_copy_button.pack(pady=10)
 
-        global output_text
         output_text = tk.Text(content_frame, height=10, width=60, wrap=tk.WORD)
         output_text.pack(pady=10)
         output_text.config(state=tk.DISABLED)
@@ -189,6 +211,31 @@ def update_content(option):
 
         save_copy_button = ttk.Button(content_frame, text="Generate Decode File", command=decode_ecc_file, style="Rounded.TButton")
         save_copy_button.pack(pady=10)
+
+    elif option == Page.SOLANA:
+        content_title = tk.Label(content_frame, text=Page.SOLANA.value, font=("Helvetica", 18, "bold"),
+                                 bg=content_background_color, fg="#000000")
+        content_title.pack(pady=10)
+
+        tk.Label(content_frame, text="My Public Key:", bg=content_background_color, fg="#000000").pack()
+        ttk.Entry(content_frame, textvariable=my_public_key_var, width=50).pack(pady=5)
+
+        tk.Label(content_frame, text="Escrow Public Key:", bg=content_background_color, fg="#000000").pack()
+        ttk.Entry(content_frame, textvariable=escrow_public_key_var, width=50).pack(pady=5)
+
+        button_frame = tk.Frame(content_frame, bg=content_background_color)
+        button_frame.pack(pady=5)
+
+        ttk.Button(button_frame, text="Start Subscription", command=start_subscription, style="Rounded.TButton").pack(
+            side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Add Funds to Subscription", command=add_funds_to_subscription,
+                   style="Rounded.TButton").pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="End Subscription", command=end_subscription, style="Rounded.TButton").pack(
+            side=tk.LEFT, padx=5)
+
+        output_text = tk.Text(content_frame, height=10, width=60, wrap=tk.WORD)
+        output_text.pack(pady=10)
+        output_text.config(state=tk.DISABLED)
 
 
 # Create main window
@@ -227,6 +274,12 @@ file_path_to_decode_var = tk.StringVar()
 
 # Variable to track selected option
 selected_option = tk.StringVar(value=Page.ENCODING)
+
+# Variable to track my public key
+my_public_key_var = tk.StringVar()
+
+# Variable to track escrow public key
+escrow_public_key_var = tk.StringVar()
 
 # Main layout
 main_frame = ttk.Frame(root)
