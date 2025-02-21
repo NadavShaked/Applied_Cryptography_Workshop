@@ -20,6 +20,11 @@ class Page(Enum):
     SOLANA = "Solana"
 
 
+solana_start_subscription_output_text_value = ""
+solana_add_funds_to_subscription_output_text_value = ""
+solana_end_subscription_output_text_value = ""
+
+
 def encoding_select_file():
     file_path = filedialog.askopenfilename(title="Select a File")
     if file_path:
@@ -119,6 +124,8 @@ def decode_ecc_file():
 
 
 def start_subscription():
+    global solana_start_subscription_output_text_value
+
     public_key = start_subscription_frame_my_public_key_var.get().strip()
 
     solana_start_subscription_output_text.config(state=tk.NORMAL)
@@ -129,31 +136,38 @@ def start_subscription():
     else:
         solana_start_subscription_output_text.insert(tk.END, f"{public_key}\n")
         start_subscription_frame_escrow_public_key_var.set(public_key)
+
+    solana_start_subscription_output_text_value = solana_start_subscription_output_text.get("1.0", tk.END)
     solana_start_subscription_output_text.config(state=tk.DISABLED)
 
 
 def add_funds_to_subscription():
+    global solana_add_funds_to_subscription_output_text_value
+
     public_key = add_funds_to_subscription_frame_my_public_key_var.get().strip()
     escrow_public_key = add_funds_to_subscription_frame_escrow_public_key_var.get().strip()
     sol_amount = add_funds_to_subscription_frame_sol_amount_var.get().strip()
 
-    solana_add_fund_to_subscription_output_text.config(state=tk.NORMAL)
-    solana_add_fund_to_subscription_output_text.delete("1.0", tk.END)
+    solana_add_funds_to_subscription_output_text.config(state=tk.NORMAL)
+    solana_add_funds_to_subscription_output_text.delete("1.0", tk.END)
 
     if not public_key:
-        solana_add_fund_to_subscription_output_text.insert(tk.END, "My public key is required\n")
+        solana_add_funds_to_subscription_output_text.insert(tk.END, "My public key is required\n")
     if not escrow_public_key:
-        solana_add_fund_to_subscription_output_text.insert(tk.END, "Escrow public key is required\n")
+        solana_add_funds_to_subscription_output_text.insert(tk.END, "Escrow public key is required\n")
     if not sol_amount:
-        solana_add_fund_to_subscription_output_text.insert(tk.END, "SOL amount is required\n")
+        solana_add_funds_to_subscription_output_text.insert(tk.END, "SOL amount is required\n")
 
     if public_key and escrow_public_key and sol_amount:
-        solana_add_fund_to_subscription_output_text.insert(tk.END, "Success\n")
+        solana_add_funds_to_subscription_output_text.insert(tk.END, "Success\n")
 
-    solana_add_fund_to_subscription_output_text.config(state=tk.DISABLED)
+    solana_add_funds_to_subscription_output_text_value = solana_add_funds_to_subscription_output_text.get("1.0", tk.END)
+    solana_add_funds_to_subscription_output_text.config(state=tk.DISABLED)
 
 
 def end_subscription():
+    global solana_end_subscription_output_text_value
+
     public_key = end_subscription_frame_my_public_key_var.get().strip()
     escrow_public_key = end_subscription_frame_escrow_public_key_var.get().strip()
 
@@ -168,6 +182,7 @@ def end_subscription():
     if public_key and escrow_public_key:
         solana_end_subscription_output_text.insert(tk.END, "Success\n")
 
+    solana_end_subscription_output_text_value = solana_end_subscription_output_text.get("1.0", tk.END)
     solana_end_subscription_output_text.config(state=tk.DISABLED)  # Disable it again
 
 
@@ -192,6 +207,11 @@ def update_solana_content(selected_button):
         solana_start_subscription_output_text.pack(pady=10)
         solana_start_subscription_output_text.config(state=tk.DISABLED)
 
+        if solana_start_subscription_output_text_value:
+            solana_start_subscription_output_text.config(state=tk.NORMAL)
+            solana_start_subscription_output_text.insert(tk.END, solana_start_subscription_output_text_value)
+            solana_start_subscription_output_text.config(state=tk.DISABLED)
+
     elif selected_button == "Add Funds to Subscription":
         # Add content for "Add Funds to Subscription"
         tk.Label(solana_content_frame, text="My Public Key:", bg=content_background_color, fg="#000000").pack()
@@ -206,10 +226,15 @@ def update_solana_content(selected_button):
         # Button to add funds to the subscription
         ttk.Button(solana_content_frame, text="Add Funds to Subscription", command=add_funds_to_subscription, style="Rounded.TButton").pack(pady=5)
 
-        global solana_add_fund_to_subscription_output_text
-        solana_add_fund_to_subscription_output_text = tk.Text(solana_content_frame, height=15, width=80, wrap=tk.WORD)
-        solana_add_fund_to_subscription_output_text.pack(pady=10)
-        solana_add_fund_to_subscription_output_text.config(state=tk.DISABLED)
+        global solana_add_funds_to_subscription_output_text
+        solana_add_funds_to_subscription_output_text = tk.Text(solana_content_frame, height=15, width=80, wrap=tk.WORD)
+        solana_add_funds_to_subscription_output_text.pack(pady=10)
+        solana_add_funds_to_subscription_output_text.config(state=tk.DISABLED)
+
+        if solana_add_funds_to_subscription_output_text_value:
+            solana_add_funds_to_subscription_output_text.config(state=tk.NORMAL)
+            solana_add_funds_to_subscription_output_text.insert(tk.END, solana_add_funds_to_subscription_output_text_value)
+            solana_add_funds_to_subscription_output_text.config(state=tk.DISABLED)
 
     elif selected_button == "End Subscription":
         # Add content for "End Subscription"
@@ -226,6 +251,11 @@ def update_solana_content(selected_button):
         solana_end_subscription_output_text = tk.Text(solana_content_frame, height=15, width=80, wrap=tk.WORD)
         solana_end_subscription_output_text.pack(pady=10)
         solana_end_subscription_output_text.config(state=tk.DISABLED)
+
+        if solana_end_subscription_output_text_value:
+            solana_end_subscription_output_text.config(state=tk.NORMAL)
+            solana_end_subscription_output_text.insert(tk.END, solana_end_subscription_output_text_value)
+            solana_end_subscription_output_text.config(state=tk.DISABLED)
 
 
 def update_content(option):
