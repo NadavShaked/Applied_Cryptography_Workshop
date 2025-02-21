@@ -6,6 +6,7 @@ from tkinter import ttk
 
 # Third-party library imports
 from enum import Enum
+from PIL import ImageTk, Image
 
 # Local imports
 from PublicKeyVersionScheme.helpers import get_blocks_authenticators_by_file_path, p, MAC_SIZE, BLOCK_SIZE, generate_x, \
@@ -294,6 +295,10 @@ root = tk.Tk()
 root.title("Crypto Course")
 root.geometry("800x500")
 root.resizable(False, False)
+icon_image = Image.open(
+    './Application/solana-sol-logo.ico')
+icon = ImageTk.PhotoImage(icon_image)
+root.iconphoto(True, icon)
 
 # Styling
 nav_color = "#1c2c3c"
