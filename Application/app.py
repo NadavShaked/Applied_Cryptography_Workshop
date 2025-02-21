@@ -153,7 +153,19 @@ def add_funds_to_subscription():
 def end_subscription():
     solana_output_text.config(state=tk.NORMAL)
     solana_output_text.delete("1.0", tk.END)
-    solana_output_text.insert(tk.END, "Success\n")
+
+    public_key = my_public_key_var.get().strip()
+    escrow_public_key = escrow_public_key_var.get().strip()
+
+    # Validate if both public keys are provided
+    if not public_key:
+        solana_output_text.insert(tk.END, "My public key is required\n")
+    if not escrow_public_key:
+        solana_output_text.insert(tk.END, "Escrow public key is required\n")
+
+    if public_key and escrow_public_key:
+        solana_output_text.insert(tk.END, "Success\n")
+
     solana_output_text.config(state=tk.DISABLED)
 
 
