@@ -12,8 +12,6 @@ from PublicKeyVersionScheme.helpers import get_blocks_authenticators_by_file_pat
     generate_g, generate_v, generate_u, compress_g2_to_hex, compress_g1_to_hex
 from Common.helpers import write_file_by_blocks_with_authenticators, write_file_by_blocks
 
-global output_text
-
 
 class Page(Enum):
     ENCODING = "Encoding"
@@ -64,13 +62,13 @@ def generate_ecc_file():
             write_file_by_blocks_with_authenticators(encoded_file_path, blocks_with_authenticators)
 
             # Display values in the UI
-            output_text.config(state=tk.NORMAL)
-            output_text.delete("1.0", tk.END)
-            output_text.insert(tk.END, f"x (private key): {x}\n")
-            output_text.insert(tk.END, f"g: {compress_g2_to_hex(g)}\n")
-            output_text.insert(tk.END, f"v (g^x in G2): {compress_g2_to_hex(v)}\n")
-            output_text.insert(tk.END, f"u (in G1): {compress_g1_to_hex(u)}\n")
-            output_text.config(state=tk.DISABLED)
+            encoding_output_text.config(state=tk.NORMAL)
+            encoding_output_text.delete("1.0", tk.END)
+            encoding_output_text.insert(tk.END, f"x (private key): {x}\n")
+            encoding_output_text.insert(tk.END, f"g: {compress_g2_to_hex(g)}\n")
+            encoding_output_text.insert(tk.END, f"v (g^x in G2): {compress_g2_to_hex(v)}\n")
+            encoding_output_text.insert(tk.END, f"u (in G1): {compress_g1_to_hex(u)}\n")
+            encoding_output_text.config(state=tk.DISABLED)
 
             messagebox.showinfo("Success", f"ECC File copied to {encoded_file_path}")
         except Exception as e:
@@ -120,24 +118,43 @@ def decode_ecc_file():
 
 
 def start_subscription():
-    output_text.config(state=tk.NORMAL)
-    output_text.delete("1.0", tk.END)
-    output_text.insert(tk.END, f"{my_public_key_var.get()}\n")
-    output_text.config(state=tk.DISABLED)
+    solana_output_text.config(state=tk.NORMAL)
+    solana_output_text.delete("1.0", tk.END)
+    public_key = my_public_key_var.get().strip()
+    if not public_key:
+        solana_output_text.insert(tk.END, "My public key is required\n")
+    else:
+        solana_output_text.insert(tk.END, f"{public_key}\n")
+        escrow_public_key_var.set(public_key)
+    solana_output_text.config(state=tk.DISABLED)
 
 
 def add_funds_to_subscription():
-    output_text.config(state=tk.NORMAL)
-    output_text.delete("1.0", tk.END)
-    output_text.insert(tk.END, f"{my_public_key_var.get()}\n{escrow_public_key_var.get()}\n")
-    output_text.config(state=tk.DISABLED)
+    solana_output_text.config(state=tk.NORMAL)
+    solana_output_text.delete("1.0", tk.END)
+
+    public_key = my_public_key_var.get().strip()
+    escrow_public_key = escrow_public_key_var.get().strip()
+    sol_amount = sol_amount_var.get().strip()
+
+    if not public_key:
+        solana_output_text.insert(tk.END, "My public key is required\n")
+    if not escrow_public_key:
+        solana_output_text.insert(tk.END, "Escrow public key is required\n")
+    if not sol_amount:
+        solana_output_text.insert(tk.END, "SOL amount is required\n")
+
+    if public_key and escrow_public_key and sol_amount:
+        solana_output_text.insert(tk.END, "Success\n")
+
+    solana_output_text.config(state=tk.DISABLED)
 
 
 def end_subscription():
-    output_text.config(state=tk.NORMAL)
-    output_text.delete("1.0", tk.END)
-    output_text.insert(tk.END, "Success\n")
-    output_text.config(state=tk.DISABLED)
+    solana_output_text.config(state=tk.NORMAL)
+    solana_output_text.delete("1.0", tk.END)
+    solana_output_text.insert(tk.END, "Success\n")
+    solana_output_text.config(state=tk.DISABLED)
 
 
 def update_content(option):
@@ -182,9 +199,10 @@ def update_content(option):
         save_copy_button = ttk.Button(content_frame, text="Generate ECC File", command=generate_ecc_file, style="Rounded.TButton")
         save_copy_button.pack(pady=10)
 
-        output_text = tk.Text(content_frame, height=10, width=60, wrap=tk.WORD)
-        output_text.pack(pady=10)
-        output_text.config(state=tk.DISABLED)
+        global encoding_output_text
+        encoding_output_text = tk.Text(content_frame, height=15, width=80, wrap=tk.WORD)
+        encoding_output_text.pack(pady=10)
+        encoding_output_text.config(state=tk.DISABLED)
 
     elif option == Page.DECODING:
         content_title = tk.Label(content_frame, text=Page.DECODING.value, font=("Helvetica", 18, "bold"), bg=content_background_color, fg="#000000")
@@ -213,29 +231,50 @@ def update_content(option):
         save_copy_button.pack(pady=10)
 
     elif option == Page.SOLANA:
+
         content_title = tk.Label(content_frame, text=Page.SOLANA.value, font=("Helvetica", 18, "bold"),
+
                                  bg=content_background_color, fg="#000000")
+
         content_title.pack(pady=10)
 
         tk.Label(content_frame, text="My Public Key:", bg=content_background_color, fg="#000000").pack()
+
         ttk.Entry(content_frame, textvariable=my_public_key_var, width=50).pack(pady=5)
 
         tk.Label(content_frame, text="Escrow Public Key:", bg=content_background_color, fg="#000000").pack()
+
         ttk.Entry(content_frame, textvariable=escrow_public_key_var, width=50).pack(pady=5)
 
+        # Added SOL amount to transfer text box
+
+        tk.Label(content_frame, text="SOL Amount to Transfer:", bg=content_background_color, fg="#000000").pack()
+
+        ttk.Entry(content_frame, textvariable=sol_amount_var, width=50).pack(pady=5)
+
         button_frame = tk.Frame(content_frame, bg=content_background_color)
+
         button_frame.pack(pady=5)
 
         ttk.Button(button_frame, text="Start Subscription", command=start_subscription, style="Rounded.TButton").pack(
-            side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Add Funds to Subscription", command=add_funds_to_subscription,
-                   style="Rounded.TButton").pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="End Subscription", command=end_subscription, style="Rounded.TButton").pack(
+
             side=tk.LEFT, padx=5)
 
-        output_text = tk.Text(content_frame, height=10, width=60, wrap=tk.WORD)
-        output_text.pack(pady=10)
-        output_text.config(state=tk.DISABLED)
+        ttk.Button(button_frame, text="Add Funds to Subscription", command=add_funds_to_subscription,
+
+                   style="Rounded.TButton").pack(side=tk.LEFT, padx=5)
+
+        ttk.Button(button_frame, text="End Subscription", command=end_subscription, style="Rounded.TButton").pack(
+
+            side=tk.LEFT, padx=5)
+
+        global solana_output_text
+
+        solana_output_text = tk.Text(content_frame, height=10, width=80, wrap=tk.WORD)
+
+        solana_output_text.pack(pady=10)
+
+        solana_output_text.config(state=tk.DISABLED)
 
 
 # Create main window
@@ -280,6 +319,9 @@ my_public_key_var = tk.StringVar()
 
 # Variable to track escrow public key
 escrow_public_key_var = tk.StringVar()
+
+# Variable to track SOL amount
+sol_amount_var = tk.StringVar()
 
 # Main layout
 main_frame = ttk.Frame(root)
