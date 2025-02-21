@@ -5,6 +5,7 @@ from tkinter import filedialog, messagebox
 from tkinter import ttk
 
 # Third-party library imports
+from enum import Enum
 
 # Local imports
 from PublicKeyVersionScheme.helpers import get_blocks_authenticators_by_file_path, p, MAC_SIZE, BLOCK_SIZE, generate_x, \
@@ -12,30 +13,36 @@ from PublicKeyVersionScheme.helpers import get_blocks_authenticators_by_file_pat
 from Common.helpers import write_file_by_blocks_with_authenticators, write_file_by_blocks
 
 
-def encrypt_select_file():
-    file_path = filedialog.askopenfilename(title="Select a File")
-    if file_path:
-        file_path_to_encrypt_var.set(file_path)
+class Page(Enum):
+    ENCODING = "Encoding"
+    DECODING = "Decoding"
+    SOLANA = "Solana"
 
 
-def decrypt_select_file():
+def encoding_select_file():
     file_path = filedialog.askopenfilename(title="Select a File")
     if file_path:
-        file_path_to_decrypt_var.set(file_path)
+        file_path_to_encode_var.set(file_path)
+
+
+def decoding_select_file():
+    file_path = filedialog.askopenfilename(title="Select a File")
+    if file_path:
+        file_path_to_decode_var.set(file_path)
 
 
 def generate_ecc_file():
-    if not file_path_to_encrypt_var.get():
+    if not file_path_to_encode_var.get():
         messagebox.showwarning("Warning", "Please select a file first.")
         return
 
     save_path = filedialog.askdirectory(title="Select Destination Folder")
 
     if save_path:
-        file_name = os.path.basename(file_path_to_encrypt_var.get())
+        file_name = os.path.basename(file_path_to_encode_var.get())
         encoded_file_name: str = file_name + ".encoded"
 
-        file_path = file_path_to_encrypt_var.get()
+        file_path = file_path_to_encode_var.get()
         encoded_file_path = os.path.join(save_path, encoded_file_name)
         try:
             x: int = generate_x() # private key
@@ -68,15 +75,15 @@ def generate_ecc_file():
             messagebox.showerror("Error", f"Failed to copy file: {e}")
 
 
-def decrypt_ecc_file():
-    if not file_path_to_decrypt_var.get():
+def decode_ecc_file():
+    if not file_path_to_decode_var.get():
         messagebox.showwarning("Warning", "Please select a file first.")
         return
 
     save_path = filedialog.askdirectory(title="Select Destination Folder")
 
     if save_path:
-        file_name = os.path.basename(file_path_to_decrypt_var.get())
+        file_name = os.path.basename(file_path_to_decode_var.get())
 
         if not file_name.endswith(".encoded"):
             messagebox.showwarning("Warning", "Selected file must have a .encoded extension.")
@@ -84,7 +91,7 @@ def decrypt_ecc_file():
 
         decoded_file_name = file_name.removesuffix(".encoded")
 
-        file_path = file_path_to_decrypt_var.get()
+        file_path = file_path_to_decode_var.get()
         decoded_file_path = os.path.join(save_path, decoded_file_name)
         try:
             _3d_mac_size: int = MAC_SIZE * 3
@@ -105,7 +112,7 @@ def decrypt_ecc_file():
 
             write_file_by_blocks(decoded_file_path, blocks)
 
-            messagebox.showinfo("Success", f"Decrypted File copied to {decoded_file_path}")
+            messagebox.showinfo("Success", f"Decode file copied to {decoded_file_path}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to copy file: {e}")
 
@@ -126,13 +133,13 @@ def update_content(option):
             else:
                 child.configure(style="Rounded.TButton")  # Reset others to the default style
 
-    if option == "Encryption":
-        content_title = tk.Label(content_frame, text="Encryption", font=("Helvetica", 18, "bold"), bg=content_background_color, fg="#000000")
+    if option == Page.ENCODING:
+        content_title = tk.Label(content_frame, text=Page.ENCODING.value, font=("Helvetica", 18, "bold"), bg=content_background_color, fg="#000000")
         content_title.pack(pady=10)
 
         content_description = tk.Label(
             content_frame,
-            text="Perform a full encryption and authentication.",
+            text="Perform a full encoding and authentication.",
             wraplength=400,
             justify="center",
             bg=content_background_color,
@@ -140,13 +147,13 @@ def update_content(option):
         )
         content_description.pack(pady=10)
 
-        action_button = ttk.Button(content_frame, text="Select File To Encrypt", command=encrypt_select_file, style="Rounded.TButton")
+        action_button = ttk.Button(content_frame, text="Select File To Encode", command=encoding_select_file, style="Rounded.TButton")
         action_button.pack(pady=20)
 
         file_path_label = tk.Label(content_frame, text="Selected File:", bg=content_background_color, fg="#000000")
         file_path_label.pack(pady=(10, 0))
 
-        file_path_entry = ttk.Entry(content_frame, textvariable=file_path_to_encrypt_var, state="readonly", width=50)
+        file_path_entry = ttk.Entry(content_frame, textvariable=file_path_to_encode_var, state="readonly", width=50)
         file_path_entry.pack(pady=5)
 
         save_copy_button = ttk.Button(content_frame, text="Generate ECC File", command=generate_ecc_file, style="Rounded.TButton")
@@ -157,13 +164,13 @@ def update_content(option):
         output_text.pack(pady=10)
         output_text.config(state=tk.DISABLED)
 
-    elif option == "Decryption":
-        content_title = tk.Label(content_frame, text="Decryption", font=("Helvetica", 18, "bold"), bg=content_background_color, fg="#000000")
+    elif option == Page.DECODING:
+        content_title = tk.Label(content_frame, text=Page.DECODING.value, font=("Helvetica", 18, "bold"), bg=content_background_color, fg="#000000")
         content_title.pack(pady=10)
 
         content_description = tk.Label(
             content_frame,
-            text="Perform a full decryption.",
+            text="Perform a full decoding.",
             wraplength=400,
             justify="center",
             bg=content_background_color,
@@ -171,16 +178,16 @@ def update_content(option):
         )
         content_description.pack(pady=10)
 
-        action_button = ttk.Button(content_frame, text="Select File To Decrypt", command=decrypt_select_file, style="Rounded.TButton")
+        action_button = ttk.Button(content_frame, text="Select File To Decode", command=decoding_select_file, style="Rounded.TButton")
         action_button.pack(pady=20)
 
         file_path_label = tk.Label(content_frame, text="Selected ECC File:", bg=content_background_color, fg="#000000")
         file_path_label.pack(pady=(10, 0))
 
-        file_path_entry = ttk.Entry(content_frame, textvariable=file_path_to_decrypt_var, state="readonly", width=50)
+        file_path_entry = ttk.Entry(content_frame, textvariable=file_path_to_decode_var, state="readonly", width=50)
         file_path_entry.pack(pady=5)
 
-        save_copy_button = ttk.Button(content_frame, text="Generate Decrypted File", command=decrypt_ecc_file, style="Rounded.TButton")
+        save_copy_button = ttk.Button(content_frame, text="Generate Decode File", command=decode_ecc_file, style="Rounded.TButton")
         save_copy_button.pack(pady=10)
 
 
@@ -212,14 +219,14 @@ style.map("Selected.TButton",
           background=[("active", button_color), ("!disabled", button_color)],
           foreground=[("active", text_color), ("!disabled", text_color)])
 
-# Variable to store selected file path to encrypt
-file_path_to_encrypt_var = tk.StringVar()
+# Variable to store selected file path to encode
+file_path_to_encode_var = tk.StringVar()
 
-# Variable to store selected file path to decrypt
-file_path_to_decrypt_var = tk.StringVar()
+# Variable to store selected file path to decode
+file_path_to_decode_var = tk.StringVar()
 
 # Variable to track selected option
-selected_option = tk.StringVar(value="Encryption")
+selected_option = tk.StringVar(value=Page.ENCODING)
 
 # Main layout
 main_frame = ttk.Frame(root)
@@ -233,9 +240,9 @@ nav_label = tk.Label(nav_frame, text="Crypto Course", font=("Helvetica", 16, "bo
 nav_label.pack(pady=20)
 
 # Menu options
-menu_options = ["Encryption", "Decryption"]
+menu_options = [Page.ENCODING, Page.DECODING, Page.SOLANA]
 for option in menu_options:
-    btn = ttk.Button(nav_frame, text=option, command=lambda opt=option: update_content(opt))
+    btn = ttk.Button(nav_frame, text=option.value, command=lambda opt=option: update_content(opt))
     btn.pack(fill=tk.X, pady=5, ipadx=10)  # Fill horizontally across the nav_frame
 
 # Right content panel
@@ -243,7 +250,7 @@ content_frame = tk.Frame(main_frame, bg=content_background_color)
 content_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=20, pady=20)
 
 # Initially load Encryption content
-update_content("Encryption")
+update_content(Page.ENCODING)
 
 # Start GUI main loop
 root.mainloop()
