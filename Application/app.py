@@ -23,6 +23,7 @@ class Page(Enum):
 solana_start_subscription_output_text_value = ""
 solana_add_funds_to_subscription_output_text_value = ""
 solana_end_subscription_output_text_value = ""
+solana_request_funds_output_text_value = ""
 
 
 def encoding_select_file():
@@ -186,6 +187,23 @@ def end_subscription():
     solana_end_subscription_output_text.config(state=tk.DISABLED)  # Disable it again
 
 
+def request_funds():
+    global solana_request_funds_output_text_value
+
+    public_key = start_subscription_frame_my_public_key_var.get().strip()
+
+    solana_request_funds_output_text.config(state=tk.NORMAL)
+    solana_request_funds_output_text.delete("1.0", tk.END)
+
+    if not public_key:
+        solana_request_funds_output_text.insert(tk.END, "My public key is required\n")
+    else:
+        solana_request_funds_output_text.insert(tk.END, f"{public_key}\n")
+        request_funds_frame_escrow_public_key_var.set(public_key)
+
+    solana_request_funds_output_text_value = solana_request_funds_output_text.get("1.0", tk.END)
+    solana_request_funds_output_text.config(state=tk.DISABLED)
+
 def update_solana_content(selected_button):
     # Clear the current content in the solana_content_frame
     for widget in solana_content_frame.winfo_children():
@@ -236,26 +254,59 @@ def update_solana_content(selected_button):
             solana_add_funds_to_subscription_output_text.insert(tk.END, solana_add_funds_to_subscription_output_text_value)
             solana_add_funds_to_subscription_output_text.config(state=tk.DISABLED)
 
+
     elif selected_button == "End Subscription":
+
         # Add content for "End Subscription"
+
         tk.Label(solana_content_frame, text="My Public Key:", bg=content_background_color, fg="#000000").pack()
+
         ttk.Entry(solana_content_frame, textvariable=end_subscription_frame_my_public_key_var, width=50).pack(pady=5)
 
         tk.Label(solana_content_frame, text="Escrow Public Key:", bg=content_background_color, fg="#000000").pack()
-        ttk.Entry(solana_content_frame, textvariable=end_subscription_frame_escrow_public_key_var, width=50).pack(pady=5)
+
+        ttk.Entry(solana_content_frame, textvariable=end_subscription_frame_escrow_public_key_var, width=50).pack(
+            pady=5)
 
         # Button to end the subscription
-        ttk.Button(solana_content_frame, text="Send request to Solana", command=end_subscription, style="Rounded.TButton").pack(pady=5)
+
+        ttk.Button(solana_content_frame, text="Send request to Solana", command=end_subscription,
+                   style="Rounded.TButton").pack(pady=5)
 
         global solana_end_subscription_output_text
+
         solana_end_subscription_output_text = tk.Text(solana_content_frame, height=15, width=80, wrap=tk.WORD)
+
         solana_end_subscription_output_text.pack(pady=10)
+
         solana_end_subscription_output_text.config(state=tk.DISABLED)
 
         if solana_end_subscription_output_text_value:
             solana_end_subscription_output_text.config(state=tk.NORMAL)
+
             solana_end_subscription_output_text.insert(tk.END, solana_end_subscription_output_text_value)
+
             solana_end_subscription_output_text.config(state=tk.DISABLED)
+
+    elif selected_button == "Request Funds":
+        tk.Label(solana_content_frame, text="My Public Key:", bg=content_background_color, fg="#000000").pack()
+        ttk.Entry(solana_content_frame, textvariable=request_funds_frame_my_public_key_var, width=50).pack(pady=5)
+
+        tk.Label(solana_content_frame, text="Escrow Public Key:", bg=content_background_color, fg="#000000").pack()
+        ttk.Entry(solana_content_frame, textvariable=request_funds_frame_escrow_public_key_var, width=50).pack(pady=5)
+
+        # Button to end the subscription
+        ttk.Button(solana_content_frame, text="Send request to Solana", command=request_funds, style="Rounded.TButton").pack(pady=5)
+
+        global solana_request_funds_output_text
+        solana_request_funds_output_text = tk.Text(solana_content_frame, height=15, width=80, wrap=tk.WORD)
+        solana_request_funds_output_text.pack(pady=10)
+        solana_request_funds_output_text.config(state=tk.DISABLED)
+
+        if solana_request_funds_output_text_value:
+            solana_request_funds_output_text.config(state=tk.NORMAL)
+            solana_request_funds_output_text.insert(tk.END, solana_request_funds_output_text_value)
+            solana_request_funds_output_text.config(state=tk.DISABLED)
 
 
 def update_content(option):
@@ -348,6 +399,8 @@ def update_content(option):
             side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="End Subscription", command=lambda: update_solana_content("End Subscription"),
                    style="Rounded.TButton").pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Request Funds", command=lambda: update_solana_content("Request Funds"),
+                   style="Rounded.TButton").pack(side=tk.LEFT, padx=5)
 
         global solana_content_frame
         # Create a new frame below the buttons for dynamic content
@@ -418,6 +471,12 @@ add_funds_to_subscription_frame_sol_amount_var = tk.StringVar()
 end_subscription_frame_my_public_key_var = tk.StringVar()
 # Variable to track my public key in end subscription frame
 end_subscription_frame_escrow_public_key_var = tk.StringVar()
+
+# Solana - Request funds frame
+# Variable to track my public key in request funds frame
+request_funds_frame_my_public_key_var = tk.StringVar()
+# Variable to track my public key in request funds frame
+request_funds_frame_escrow_public_key_var = tk.StringVar()
 
 # Main layout
 main_frame = ttk.Frame(root)
