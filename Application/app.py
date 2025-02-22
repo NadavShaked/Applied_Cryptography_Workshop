@@ -20,6 +20,13 @@ class Page(Enum):
     SOLANA = "Solana"
 
 
+class Solana_Page(Enum):
+    START_SUBSCRIPTION = "Start Subscription"
+    ADD_FUNDS_TO_SUBSCRIPTION = "Add Funds To Subscription"
+    END_SUBSCRIPTION = "End Subscription"
+    REQUEST_FUNDS = "Request Funds"
+
+
 solana_start_subscription_output_text_value = ""
 solana_add_funds_to_subscription_output_text_value = ""
 solana_end_subscription_output_text_value = ""
@@ -225,7 +232,7 @@ def request_funds():
     solana_request_funds_output_text.config(state=tk.DISABLED)
 
 
-def update_solana_content(button_frame, selected_button):
+def update_solana_content(button_frame, selected_solana_page_option):
     # Clear the current content in the solana_content_frame
     for widget in solana_content_frame.winfo_children():
         widget.destroy()
@@ -233,12 +240,12 @@ def update_solana_content(button_frame, selected_button):
     # Update button colors based on the selected option
     for child in button_frame.winfo_children():
         if isinstance(child, ttk.Button):
-            if child.cget("text") == selected_button:
+            if child.cget("text") == selected_solana_page_option.value:
                 child.configure(style="Selected.TButton")
             else:
                 child.configure(style="Rounded.TButton")
 
-    if selected_button == "Start Subscription":
+    if selected_solana_page_option == Solana_Page.START_SUBSCRIPTION:
         # Add content for "Start Subscription"
         tk.Label(solana_content_frame, text="Buyer Account:", bg=content_background_color, fg="#000000").pack()
         ttk.Entry(solana_content_frame, textvariable=start_subscription_frame_my_public_key_var, width=50).pack(pady=5)
@@ -277,7 +284,7 @@ def update_solana_content(button_frame, selected_button):
                                                                                                         padx=5)
 
         # Button to start the subscription
-        ttk.Button(solana_content_frame, text="Start Subscription", command=start_subscription,
+        ttk.Button(solana_content_frame, text="Send Request to Solana", command=start_subscription,
                    style="Rounded.TButton").pack(pady=5)
 
         global solana_start_subscription_output_text
@@ -290,7 +297,7 @@ def update_solana_content(button_frame, selected_button):
             solana_start_subscription_output_text.insert(tk.END, solana_start_subscription_output_text_value)
             solana_start_subscription_output_text.config(state=tk.DISABLED)
 
-    elif selected_button == "Add Funds to Subscription":
+    elif selected_solana_page_option == Solana_Page.ADD_FUNDS_TO_SUBSCRIPTION:
         # Add content for "Add Funds to Subscription"
         tk.Label(solana_content_frame, text="My Public Key:", bg=content_background_color, fg="#000000").pack()
         ttk.Entry(solana_content_frame, textvariable=add_funds_to_subscription_frame_my_public_key_var, width=50).pack(pady=5)
@@ -302,7 +309,7 @@ def update_solana_content(button_frame, selected_button):
         ttk.Entry(solana_content_frame, textvariable=add_funds_to_subscription_frame_sol_amount_var, width=50).pack(pady=5)
 
         # Button to add funds to the subscription
-        ttk.Button(solana_content_frame, text="Add Funds to Subscription", command=add_funds_to_subscription, style="Rounded.TButton").pack(pady=5)
+        ttk.Button(solana_content_frame, text="Send Request to Solana", command=add_funds_to_subscription, style="Rounded.TButton").pack(pady=5)
 
         global solana_add_funds_to_subscription_output_text
         solana_add_funds_to_subscription_output_text = tk.Text(solana_content_frame, height=15, width=80, wrap=tk.WORD)
@@ -314,7 +321,7 @@ def update_solana_content(button_frame, selected_button):
             solana_add_funds_to_subscription_output_text.insert(tk.END, solana_add_funds_to_subscription_output_text_value)
             solana_add_funds_to_subscription_output_text.config(state=tk.DISABLED)
 
-    elif selected_button == "End Subscription":
+    elif selected_solana_page_option == Solana_Page.END_SUBSCRIPTION:
         tk.Label(solana_content_frame, text="My Public Key:", bg=content_background_color, fg="#000000").pack()
         ttk.Entry(solana_content_frame, textvariable=end_subscription_frame_my_public_key_var, width=50).pack(pady=5)
 
@@ -337,7 +344,7 @@ def update_solana_content(button_frame, selected_button):
             solana_end_subscription_output_text.insert(tk.END, solana_end_subscription_output_text_value)
             solana_end_subscription_output_text.config(state=tk.DISABLED)
 
-    elif selected_button == "Request Funds":
+    elif selected_solana_page_option == Solana_Page.REQUEST_FUNDS:
         tk.Label(solana_content_frame, text="My Public Key:", bg=content_background_color, fg="#000000").pack()
         ttk.Entry(solana_content_frame, textvariable=request_funds_frame_my_public_key_var, width=50).pack(pady=5)
 
@@ -438,9 +445,9 @@ def update_content(option):
         button_frame = tk.Frame(content_frame, bg=content_background_color)
         button_frame.pack(pady=5)
 
-        solana_page_options = ["Start Subscription", "Add Funds to Subscription", "End Subscription", "Request Funds"]
+        solana_page_options = [Solana_Page.START_SUBSCRIPTION, Solana_Page.ADD_FUNDS_TO_SUBSCRIPTION, Solana_Page.END_SUBSCRIPTION, Solana_Page.REQUEST_FUNDS]
         for solana_page_option in solana_page_options:
-            ttk.Button(button_frame, text=solana_page_option,
+            ttk.Button(button_frame, text=solana_page_option.value,
                        command=lambda opt=solana_page_option: update_solana_content(button_frame, opt),
                        style="Rounded.TButton").pack(side=tk.LEFT, padx=5)
 
@@ -450,7 +457,7 @@ def update_content(option):
         solana_content_frame.pack(pady=10, fill=tk.BOTH, expand=True)
 
         # Set initial content for "Start Subscription"
-        update_solana_content(button_frame, "Start Subscription")
+        update_solana_content(button_frame, Solana_Page.START_SUBSCRIPTION)
 
 
 # Create main window
