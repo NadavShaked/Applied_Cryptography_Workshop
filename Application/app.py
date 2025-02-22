@@ -127,16 +127,36 @@ def decode_ecc_file():
 def start_subscription():
     global solana_start_subscription_output_text_value
 
-    public_key = start_subscription_frame_my_public_key_var.get().strip()
+    my_public_key = start_subscription_frame_my_public_key_var.get().strip()
+    seller_public_key = start_subscription_frame_seller_public_key_var.get().strip()
+    u = start_subscription_frame_u_var.get().strip()
+    g = start_subscription_frame_g_var.get().strip()
+    v = start_subscription_frame_v_var.get().strip()
+    query_size = start_subscription_frame_query_size_var.get().strip()
+    blocks_number = start_subscription_frame_blocks_number_var.get().strip()
+    validate_every = start_subscription_frame_validate_every_var.get().strip()
 
     solana_start_subscription_output_text.config(state=tk.NORMAL)
     solana_start_subscription_output_text.delete("1.0", tk.END)
 
-    if not public_key:
+    if not my_public_key:
         solana_start_subscription_output_text.insert(tk.END, "My public key is required\n")
+    if not seller_public_key:
+        solana_start_subscription_output_text.insert(tk.END, "Seller public key is required\n")
+    if not u:
+        solana_start_subscription_output_text.insert(tk.END, "u - G1 point is required\n")
+    if not g:
+        solana_start_subscription_output_text.insert(tk.END, "g - G2 point is required\n")
+    if not v:
+        solana_start_subscription_output_text.insert(tk.END, "v - G2 point is required\n")
+    if not query_size:
+        solana_start_subscription_output_text.insert(tk.END, "Query size is required\n")
+    if not blocks_number:
+        solana_start_subscription_output_text.insert(tk.END, "Block number is required\n")
+    if not validate_every:
+        solana_start_subscription_output_text.insert(tk.END, "Validate every is required\n")
     else:
-        solana_start_subscription_output_text.insert(tk.END, f"{public_key}\n")
-        start_subscription_frame_escrow_public_key_var.set(public_key)
+        solana_start_subscription_output_text.insert(tk.END, f"Escrow public key: {my_public_key}\n")
 
     solana_start_subscription_output_text_value = solana_start_subscription_output_text.get("1.0", tk.END)
     solana_start_subscription_output_text.config(state=tk.DISABLED)
@@ -204,6 +224,7 @@ def request_funds():
     solana_request_funds_output_text_value = solana_request_funds_output_text.get("1.0", tk.END)
     solana_request_funds_output_text.config(state=tk.DISABLED)
 
+
 def update_solana_content(selected_button):
     # Clear the current content in the solana_content_frame
     for widget in solana_content_frame.winfo_children():
@@ -211,14 +232,45 @@ def update_solana_content(selected_button):
 
     if selected_button == "Start Subscription":
         # Add content for "Start Subscription"
-        tk.Label(solana_content_frame, text="My Public Key:", bg=content_background_color, fg="#000000").pack()
+        tk.Label(solana_content_frame, text="Buyer Account:", bg=content_background_color, fg="#000000").pack()
         ttk.Entry(solana_content_frame, textvariable=start_subscription_frame_my_public_key_var, width=50).pack(pady=5)
 
-        tk.Label(solana_content_frame, text="Escrow Public Key:", bg=content_background_color, fg="#000000").pack()
-        ttk.Entry(solana_content_frame, textvariable=start_subscription_frame_escrow_public_key_var, width=50).pack(pady=5)
+        tk.Label(solana_content_frame, text="Seller Account:", bg=content_background_color, fg="#000000").pack()
+        ttk.Entry(solana_content_frame, textvariable=start_subscription_frame_seller_public_key_var, width=50).pack(pady=5)
+
+        # Create a frame for aligned inputs
+        param_frame = tk.Frame(solana_content_frame, bg=content_background_color)
+        param_frame.pack(pady=5)
+
+        # First row: u, g, v
+        tk.Label(param_frame, text="u:", bg=content_background_color, fg="#000000").grid(row=0, column=0, padx=5)
+        ttk.Entry(param_frame, textvariable=start_subscription_frame_u_var, width=15).grid(row=0, column=1, padx=5)
+
+        tk.Label(param_frame, text="g:", bg=content_background_color, fg="#000000").grid(row=1, column=0, padx=5)
+        ttk.Entry(param_frame, textvariable=start_subscription_frame_g_var, width=15).grid(row=1, column=1, padx=5)
+
+        tk.Label(param_frame, text="v:", bg=content_background_color, fg="#000000").grid(row=2, column=0, padx=5)
+        ttk.Entry(param_frame, textvariable=start_subscription_frame_v_var, width=15).grid(row=2, column=1, padx=5)
+
+        # Second row: query_size, blocks_number, validate_every
+        tk.Label(param_frame, text="Query Size:", bg=content_background_color, fg="#000000").grid(row=0, column=2,
+                                                                                                  padx=5)
+        ttk.Entry(param_frame, textvariable=start_subscription_frame_query_size_var, width=15).grid(row=0, column=3,
+                                                                                                    padx=5)
+
+        tk.Label(param_frame, text="Blocks Number:", bg=content_background_color, fg="#000000").grid(row=1, column=2,
+                                                                                                     padx=5)
+        ttk.Entry(param_frame, textvariable=start_subscription_frame_blocks_number_var, width=15).grid(row=1, column=3,
+                                                                                                       padx=5)
+
+        tk.Label(param_frame, text="Validate Every:", bg=content_background_color, fg="#000000").grid(row=2, column=2,
+                                                                                                      padx=5)
+        ttk.Entry(param_frame, textvariable=start_subscription_frame_validate_every_var, width=15).grid(row=2, column=3,
+                                                                                                        padx=5)
 
         # Button to start the subscription
-        ttk.Button(solana_content_frame, text="Start Subscription", command=start_subscription, style="Rounded.TButton").pack(pady=5)
+        ttk.Button(solana_content_frame, text="Start Subscription", command=start_subscription,
+                   style="Rounded.TButton").pack(pady=5)
 
         global solana_start_subscription_output_text
         solana_start_subscription_output_text = tk.Text(solana_content_frame, height=15, width=80, wrap=tk.WORD)
@@ -229,6 +281,7 @@ def update_solana_content(selected_button):
             solana_start_subscription_output_text.config(state=tk.NORMAL)
             solana_start_subscription_output_text.insert(tk.END, solana_start_subscription_output_text_value)
             solana_start_subscription_output_text.config(state=tk.DISABLED)
+
 
     elif selected_button == "Add Funds to Subscription":
         # Add content for "Add Funds to Subscription"
@@ -455,8 +508,20 @@ selected_option = tk.StringVar(value=Page.ENCODING)
 # Solana - Start subscription frame
 # Variable to track my public key in start subscription frame
 start_subscription_frame_my_public_key_var = tk.StringVar()
-# Variable to track my public key in start subscription frame
-start_subscription_frame_escrow_public_key_var = tk.StringVar()
+# Variable to track seller public key in start subscription frame
+start_subscription_frame_seller_public_key_var = tk.StringVar()
+# Variable to track u - G2 point value in start subscription frame
+start_subscription_frame_u_var = tk.StringVar()
+# Variable to track g - G2 point value in start subscription frame
+start_subscription_frame_g_var = tk.StringVar()
+# Variable to track v - G2 point value in start subscription frame
+start_subscription_frame_v_var = tk.StringVar()
+# Variable to track query size in start subscription frame
+start_subscription_frame_query_size_var = tk.StringVar()
+# Variable to track block number in start subscription frame
+start_subscription_frame_blocks_number_var = tk.StringVar()
+# Variable to track validate every in start subscription frame
+start_subscription_frame_validate_every_var = tk.StringVar()
 
 # Solana - Add fund to subscription frame
 # Variable to track my public key in add fund to subscription frame
