@@ -101,6 +101,25 @@ class SolanaGatewayClientProvider:
 
         return self._send_request("end_subscription_by_buyer", method="POST", payload=payload)
 
+    # TODO: update the comment
+    def request_funds(self, user_private_key, escrow_pubkey):
+        """
+        Generates queries for a given escrow account.
+
+        Args:
+            escrow_pubkey (str): The escrow public key.
+            user_private_key (str): The user private key.
+
+        Returns:
+            response (requests.Response): The response object from the server.
+        """
+        payload = {
+            "user_private_key": user_private_key,
+            "escrow_pubkey": escrow_pubkey,
+        }
+
+        return self._send_request("request_funds", method="POST", payload=payload)
+
     def generate_queries(self, escrow_pubkey, user_private_key):
         """
         Generates queries for a given escrow account.

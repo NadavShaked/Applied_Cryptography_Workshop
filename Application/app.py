@@ -330,16 +330,41 @@ def end_subscription():
 def request_funds():
     global solana_request_funds_output_text_value
 
-    buyer_private_key = start_subscription_frame_buyer_private_key_var.get().strip()
+    buyer_private_key = request_funds_frame_buyer_private_key_var.get().strip()
+    escrow_public_key = request_funds_frame_escrow_public_key_var.get().strip()
 
     solana_request_funds_output_text.config(state=tk.NORMAL)
     solana_request_funds_output_text.delete("1.0", tk.END)
 
+    is_valid_input = True
     if not buyer_private_key:
         solana_request_funds_output_text.insert(tk.END, "Buyer private key is required\n")
-    else:
-        solana_request_funds_output_text.insert(tk.END, f"{buyer_private_key}\n")
-        request_funds_frame_escrow_public_key_var.set(buyer_private_key)
+        is_valid_input = False
+    elif len(buyer_private_key) != SOLANA_PRIVATE_KEY_BASE58_CHARACTERS_LEN:
+        solana_request_funds_output_text.insert(tk.END, f"Buyer private key is invalid - must to be of {SOLANA_PRIVATE_KEY_BASE58_CHARACTERS_LEN} length\n")
+        is_valid_input = False
+
+    if not escrow_public_key:
+        solana_request_funds_output_text.insert(tk.END, "Escrow public key is required\n")
+        is_valid_input = False
+    elif len(escrow_public_key) != SOLANA_PUBLIC_KEY_BASE58_CHARACTERS_LEN:
+        solana_request_funds_output_text.insert(tk.END, f"Escrow public key is invalid - must to be of {SOLANA_PUBLIC_KEY_BASE58_CHARACTERS_LEN} length\n")
+        is_valid_input = False
+
+    if is_valid_input:
+        client = SolanaGatewayClientProvider()
+        response = client.request_funds(buyer_private_key, escrow_public_key)
+
+        if 200 <= response.status_code < 300:
+            # Assuming get_queries_response is the response from the GET query
+            response_json = response.json()
+
+            # Fetch the 'message' key's value
+            message = response_json.get("message")
+
+            solana_request_funds_output_text.insert(tk.END, f"{message}\n")
+        else:
+            solana_request_funds_output_text.insert(tk.END, f"Request {response.status_code} error: {response.text}\n")
 
     solana_request_funds_output_text_value = solana_request_funds_output_text.get("1.0", tk.END)
     solana_request_funds_output_text.config(state=tk.DISABLED)
