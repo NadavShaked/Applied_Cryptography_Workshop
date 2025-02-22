@@ -359,9 +359,6 @@ def update_solana_content(button_frame, selected_button):
 
 
 def update_content(option):
-    # Update the selected option
-    selected_option.set(option)
-
     # Clear the current content in the center panel
     for widget in content_frame.winfo_children():
         widget.destroy()
@@ -441,15 +438,11 @@ def update_content(option):
         button_frame = tk.Frame(content_frame, bg=content_background_color)
         button_frame.pack(pady=5)
 
-        ttk.Button(button_frame, text="Start Subscription", command=lambda: update_solana_content(button_frame, "Start Subscription"),
-                   style="Rounded.TButton").pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Add Funds to Subscription",
-                   command=lambda: update_solana_content(button_frame, "Add Funds to Subscription"), style="Rounded.TButton").pack(
-            side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="End Subscription", command=lambda: update_solana_content(button_frame, "End Subscription"),
-                   style="Rounded.TButton").pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Request Funds", command=lambda: update_solana_content(button_frame, "Request Funds"),
-                   style="Rounded.TButton").pack(side=tk.LEFT, padx=5)
+        solana_page_options = ["Start Subscription", "Add Funds to Subscription", "End Subscription", "Request Funds"]
+        for solana_page_option in solana_page_options:
+            ttk.Button(button_frame, text=solana_page_option,
+                       command=lambda opt=solana_page_option: update_solana_content(button_frame, opt),
+                       style="Rounded.TButton").pack(side=tk.LEFT, padx=5)
 
         global solana_content_frame
         # Create a new frame below the buttons for dynamic content
@@ -497,9 +490,6 @@ file_path_to_encode_var = tk.StringVar()
 
 # Variable to store selected file path to decode
 file_path_to_decode_var = tk.StringVar()
-
-# Variable to track selected option
-selected_option = tk.StringVar(value=Page.ENCODING)
 
 # Solana - Start subscription frame
 # Variable to track my public key in start subscription frame
