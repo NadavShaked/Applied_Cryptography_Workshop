@@ -8,6 +8,9 @@ from tkinter import ttk
 from enum import Enum
 from PIL import ImageTk, Image
 
+from Common.Constants.BLS12_381Constants import G1_COMPRESS_POINT_HEX_STRING_LENGTH, G2_COMPRESS_POINT_HEX_STRING_LENGTH
+from Common.Providers.SolanaApiGatewayProvider import SolanaGatewayClientProvider
+from Common.Constants.SolanaConstants import SOLANA_PRIVATE_KEY_BASE58_CHARACTERS_LEN, SOLANA_PUBLIC_KEY_BASE58_CHARACTERS_LEN
 # Local imports
 from PublicKeyVersionScheme.helpers import get_blocks_authenticators_by_file_path, p, MAC_SIZE, BLOCK_SIZE, generate_x, \
     generate_g, generate_v, generate_u, compress_g2_to_hex, compress_g1_to_hex
@@ -31,6 +34,14 @@ solana_start_subscription_output_text_value = ""
 solana_add_funds_to_subscription_output_text_value = ""
 solana_end_subscription_output_text_value = ""
 solana_request_funds_output_text_value = ""
+
+
+def is_number(s):
+    try:
+        float(s)  # Try to convert the string to a float (works for both ints and floats)
+        return True
+    except ValueError:
+        return False
 
 
 def encoding_select_file():
@@ -134,7 +145,7 @@ def decode_ecc_file():
 def start_subscription():
     global solana_start_subscription_output_text_value
 
-    my_public_key = start_subscription_frame_my_public_key_var.get().strip()
+    buyer_private_key = start_subscription_frame_buyer_public_key_var.get().strip()
     seller_public_key = start_subscription_frame_seller_public_key_var.get().strip()
     u = start_subscription_frame_u_var.get().strip()
     g = start_subscription_frame_g_var.get().strip()
@@ -146,24 +157,78 @@ def start_subscription():
     solana_start_subscription_output_text.config(state=tk.NORMAL)
     solana_start_subscription_output_text.delete("1.0", tk.END)
 
-    if not my_public_key:
-        solana_start_subscription_output_text.insert(tk.END, "My public key is required\n")
+    is_valid_input = True
+    if not buyer_private_key:
+        solana_start_subscription_output_text.insert(tk.END, "Buyer private key is required\n")
+        is_valid_input = False
+    elif len(buyer_private_key) != SOLANA_PRIVATE_KEY_BASE58_CHARACTERS_LEN:
+        solana_start_subscription_output_text.insert(tk.END, f"Buyer private key is invalid - must to be of {SOLANA_PRIVATE_KEY_BASE58_CHARACTERS_LEN} length\n")
+        is_valid_input = False
+
     if not seller_public_key:
         solana_start_subscription_output_text.insert(tk.END, "Seller public key is required\n")
+        is_valid_input = False
+    elif len(seller_public_key) != SOLANA_PUBLIC_KEY_BASE58_CHARACTERS_LEN:
+        solana_start_subscription_output_text.insert(tk.END, f"Seller public key is invalid - must to be of {SOLANA_PUBLIC_KEY_BASE58_CHARACTERS_LEN} length\n")
+        is_valid_input = False
+
     if not u:
         solana_start_subscription_output_text.insert(tk.END, "u - G1 point is required\n")
+        is_valid_input = False
+    elif len(u) != G1_COMPRESS_POINT_HEX_STRING_LENGTH:
+        solana_start_subscription_output_text.insert(tk.END, f"u - G1 point is invalid - must to be of {G1_COMPRESS_POINT_HEX_STRING_LENGTH} length\n")
+        is_valid_input = False
+
     if not g:
         solana_start_subscription_output_text.insert(tk.END, "g - G2 point is required\n")
+        is_valid_input = False
+    elif len(g) != G2_COMPRESS_POINT_HEX_STRING_LENGTH:
+        solana_start_subscription_output_text.insert(tk.END, f"g - G2 point is invalid - must to be of {G2_COMPRESS_POINT_HEX_STRING_LENGTH} length\n")
+        is_valid_input = False
+
     if not v:
         solana_start_subscription_output_text.insert(tk.END, "v - G2 point is required\n")
+        is_valid_input = False
+    elif len(v) != G2_COMPRESS_POINT_HEX_STRING_LENGTH:
+        solana_start_subscription_output_text.insert(tk.END, f"v - G2 point is invalid - must to be of {G2_COMPRESS_POINT_HEX_STRING_LENGTH} length\n")
+        is_valid_input = False
+
     if not query_size:
         solana_start_subscription_output_text.insert(tk.END, "Query size is required\n")
+        is_valid_input = False
+    elif not is_number(query_size):
+        solana_start_subscription_output_text.insert(tk.END, "Query size is invalid - must be number\n")
+        is_valid_input = False
+
     if not blocks_number:
         solana_start_subscription_output_text.insert(tk.END, "Block number is required\n")
+        is_valid_input = False
+    elif not is_number(blocks_number):
+        solana_start_subscription_output_text.insert(tk.END, "Block number is invalid - must be number\n")
+        is_valid_input = False
+
     if not validate_every:
         solana_start_subscription_output_text.insert(tk.END, "Validate every is required\n")
-    else:
-        solana_start_subscription_output_text.insert(tk.END, f"Escrow public key: {my_public_key}\n")
+        is_valid_input = False
+    elif not is_number(validate_every):
+        solana_start_subscription_output_text.insert(tk.END, "Validate every is invalid - must be number\n")
+        is_valid_input = False
+
+    if is_valid_input:
+        client = SolanaGatewayClientProvider()
+        response = client.start_subscription(buyer_private_key, seller_public_key, u, g, v, query_size, blocks_number, validate_every)
+
+        if 200 <= response.status_code < 300:
+            # Assuming get_queries_response is the response from the GET query
+            response_json = response.json()
+
+            # Fetch the 'escrow' key's value
+            escrow_public_key = response_json.get("escrow_pubkey")
+
+            solana_start_subscription_output_text.insert(tk.END, f"Escrow public key: {escrow_public_key}\n")
+        else:
+            solana_start_subscription_output_text.insert(tk.END, f"Request {response.status_code} error: {response.text}\n")
+
 
     solana_start_subscription_output_text_value = solana_start_subscription_output_text.get("1.0", tk.END)
     solana_start_subscription_output_text.config(state=tk.DISABLED)
@@ -217,7 +282,7 @@ def end_subscription():
 def request_funds():
     global solana_request_funds_output_text_value
 
-    public_key = start_subscription_frame_my_public_key_var.get().strip()
+    public_key = start_subscription_frame_buyer_public_key_var.get().strip()
 
     solana_request_funds_output_text.config(state=tk.NORMAL)
     solana_request_funds_output_text.delete("1.0", tk.END)
@@ -247,10 +312,10 @@ def update_solana_content(button_frame, selected_solana_page_option):
 
     if selected_solana_page_option == Solana_Page.START_SUBSCRIPTION:
         # Add content for "Start Subscription"
-        tk.Label(solana_content_frame, text="Buyer Account:", bg=content_background_color, fg="#000000").pack()
-        ttk.Entry(solana_content_frame, textvariable=start_subscription_frame_my_public_key_var, width=50).pack(pady=5)
+        tk.Label(solana_content_frame, text="Buyer Private Key:", bg=content_background_color, fg="#000000").pack()
+        ttk.Entry(solana_content_frame, textvariable=start_subscription_frame_buyer_public_key_var, width=50).pack(pady=5)
 
-        tk.Label(solana_content_frame, text="Seller Account:", bg=content_background_color, fg="#000000").pack()
+        tk.Label(solana_content_frame, text="Seller Public Key:", bg=content_background_color, fg="#000000").pack()
         ttk.Entry(solana_content_frame, textvariable=start_subscription_frame_seller_public_key_var, width=50).pack(pady=5)
 
         # Create a frame for aligned inputs
@@ -500,7 +565,7 @@ file_path_to_decode_var = tk.StringVar()
 
 # Solana - Start subscription frame
 # Variable to track my public key in start subscription frame
-start_subscription_frame_my_public_key_var = tk.StringVar()
+start_subscription_frame_buyer_public_key_var = tk.StringVar()
 # Variable to track seller public key in start subscription frame
 start_subscription_frame_seller_public_key_var = tk.StringVar()
 # Variable to track u - G2 point value in start subscription frame
