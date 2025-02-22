@@ -63,7 +63,7 @@ class SolanaGatewayClientProvider:
         return self._send_request("start_subscription", method="POST", payload=payload)
 
     # TODO: update the comment
-    def add_funds_to_subscription(self, buyer_private_key, escrow_pubkey, sol_amount):
+    def add_funds_to_subscription(self, buyer_private_key, escrow_pubkey, lamports_amount):
         """
         Generates queries for a given escrow account.
 
@@ -77,10 +77,29 @@ class SolanaGatewayClientProvider:
         payload = {
             "buyer_private_key": buyer_private_key,
             "escrow_pubkey": escrow_pubkey,
-            "amount": int(sol_amount),
+            "amount": int(lamports_amount),
         }
 
         return self._send_request("add_funds_to_subscription", method="POST", payload=payload)
+
+    # TODO: update the comment
+    def end_subscription_by_buyer(self, buyer_private_key, escrow_pubkey):
+        """
+        Generates queries for a given escrow account.
+
+        Args:
+            escrow_pubkey (str): The escrow public key.
+            user_private_key (str): The user private key.
+
+        Returns:
+            response (requests.Response): The response object from the server.
+        """
+        payload = {
+            "buyer_private_key": buyer_private_key,
+            "escrow_pubkey": escrow_pubkey,
+        }
+
+        return self._send_request("end_subscription_by_buyer", method="POST", payload=payload)
 
     def generate_queries(self, escrow_pubkey, user_private_key):
         """
