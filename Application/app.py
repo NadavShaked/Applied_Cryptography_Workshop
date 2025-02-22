@@ -229,7 +229,6 @@ def start_subscription():
         else:
             solana_start_subscription_output_text.insert(tk.END, f"Request {response.status_code} error: {response.text}\n")
 
-
     solana_start_subscription_output_text_value = solana_start_subscription_output_text.get("1.0", tk.END)
     solana_start_subscription_output_text.config(state=tk.DISABLED)
 
@@ -237,22 +236,49 @@ def start_subscription():
 def add_funds_to_subscription():
     global solana_add_funds_to_subscription_output_text_value
 
-    public_key = add_funds_to_subscription_frame_my_public_key_var.get().strip()
+    buyer_private_key = add_funds_to_subscription_frame_buyer_private_key_var.get().strip()
     escrow_public_key = add_funds_to_subscription_frame_escrow_public_key_var.get().strip()
     sol_amount = add_funds_to_subscription_frame_sol_amount_var.get().strip()
 
     solana_add_funds_to_subscription_output_text.config(state=tk.NORMAL)
     solana_add_funds_to_subscription_output_text.delete("1.0", tk.END)
 
-    if not public_key:
-        solana_add_funds_to_subscription_output_text.insert(tk.END, "My public key is required\n")
+    is_valid_input = True
+    if not buyer_private_key:
+        solana_add_funds_to_subscription_output_text.insert(tk.END, "Buyer private key is required\n")
+        is_valid_input = False
+    elif len(buyer_private_key) != SOLANA_PRIVATE_KEY_BASE58_CHARACTERS_LEN:
+        solana_add_funds_to_subscription_output_text.insert(tk.END, f"Buyer private key is invalid - must to be of {SOLANA_PRIVATE_KEY_BASE58_CHARACTERS_LEN} length\n")
+        is_valid_input = False
+
     if not escrow_public_key:
         solana_add_funds_to_subscription_output_text.insert(tk.END, "Escrow public key is required\n")
+        is_valid_input = False
+    elif len(escrow_public_key) != SOLANA_PUBLIC_KEY_BASE58_CHARACTERS_LEN:
+        solana_add_funds_to_subscription_output_text.insert(tk.END, f"Escrow public key is invalid - must to be of {SOLANA_PUBLIC_KEY_BASE58_CHARACTERS_LEN} length\n")
+        is_valid_input = False
+
     if not sol_amount:
         solana_add_funds_to_subscription_output_text.insert(tk.END, "SOL amount is required\n")
+        is_valid_input = False
+    elif not is_number(sol_amount):
+        solana_add_funds_to_subscription_output_text.insert(tk.END, "SOL amount is invalid - must be number\n")
+        is_valid_input = False
 
-    if public_key and escrow_public_key and sol_amount:
-        solana_add_funds_to_subscription_output_text.insert(tk.END, "Success\n")
+    if is_valid_input:
+        client = SolanaGatewayClientProvider()
+        response = client.add_funds_to_subscription(buyer_private_key, escrow_public_key, sol_amount)
+
+        if 200 <= response.status_code < 300:
+            # Assuming get_queries_response is the response from the GET query
+            response_json = response.json()
+
+            # Fetch the 'message' key's value
+            message = response_json.get("message")
+
+            solana_add_funds_to_subscription_output_text.insert(tk.END, f"{message}\n")
+        else:
+            solana_add_funds_to_subscription_output_text.insert(tk.END, f"Request {response.status_code} error: {response.text}\n")
 
     solana_add_funds_to_subscription_output_text_value = solana_add_funds_to_subscription_output_text.get("1.0", tk.END)
     solana_add_funds_to_subscription_output_text.config(state=tk.DISABLED)
@@ -364,8 +390,8 @@ def update_solana_content(button_frame, selected_solana_page_option):
 
     elif selected_solana_page_option == Solana_Page.ADD_FUNDS_TO_SUBSCRIPTION:
         # Add content for "Add Funds to Subscription"
-        tk.Label(solana_content_frame, text="My Public Key:", bg=content_background_color, fg="#000000").pack()
-        ttk.Entry(solana_content_frame, textvariable=add_funds_to_subscription_frame_my_public_key_var, width=50).pack(pady=5)
+        tk.Label(solana_content_frame, text="Buyer Private Key:", bg=content_background_color, fg="#000000").pack()
+        ttk.Entry(solana_content_frame, textvariable=add_funds_to_subscription_frame_buyer_private_key_var, width=50).pack(pady=5)
 
         tk.Label(solana_content_frame, text="Escrow Public Key:", bg=content_background_color, fg="#000000").pack()
         ttk.Entry(solana_content_frame, textvariable=add_funds_to_subscription_frame_escrow_public_key_var, width=50).pack(pady=5)
@@ -583,7 +609,7 @@ start_subscription_frame_validate_every_var = tk.StringVar()
 
 # Solana - Add fund to subscription frame
 # Variable to track my public key in add fund to subscription frame
-add_funds_to_subscription_frame_my_public_key_var = tk.StringVar()
+add_funds_to_subscription_frame_buyer_private_key_var = tk.StringVar()
 # Variable to track my public key in add fund to subscription frame
 add_funds_to_subscription_frame_escrow_public_key_var = tk.StringVar()
 # Variable to track SOL amount
