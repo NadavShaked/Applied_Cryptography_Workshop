@@ -373,7 +373,7 @@ def update_content(option):
     # Update button colors based on the selected option
     for child in nav_frame.winfo_children():
         if isinstance(child, ttk.Button):
-            if child.cget("text") == option:
+            if child.cget("text") == option.value:
                 child.configure(style="Selected.TButton")  # Apply red style to the selected button
             else:
                 child.configure(style="Rounded.TButton")  # Reset others to the default style
