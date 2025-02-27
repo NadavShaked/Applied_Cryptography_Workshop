@@ -1,6 +1,9 @@
 import os
 
 
+files_details_dict = {}
+
+
 # Function to save uploaded files to the specified directory
 def save_file(file, upload_folder):
     # Ensure the directory exists

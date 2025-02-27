@@ -126,5 +126,3 @@ print(f"AES Key (hex): {key.hex()}")
 
 # Example usage
 validate_file_with_gmac(output_file, key)
-
-print("yay")

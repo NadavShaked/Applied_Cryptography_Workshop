@@ -1,10 +1,13 @@
 # config.py
 
 import os
+import shutil
 
 # Directory to save uploaded files
 UPLOAD_FOLDER = 'StorageDirectory'
 
-# Ensure the directory exists
-if not os.path.exists(UPLOAD_FOLDER):
+if os.path.exists(UPLOAD_FOLDER):
+    shutil.rmtree(UPLOAD_FOLDER)
+else:
+    # Ensure the directory exists
     os.makedirs(UPLOAD_FOLDER)
