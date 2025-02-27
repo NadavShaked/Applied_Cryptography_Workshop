@@ -120,7 +120,8 @@ class SolanaGatewayClientProvider:
 
         return self._send_request("request_funds", method="POST", payload=payload)
 
-    def generate_queries(self, escrow_pubkey, user_private_key):
+    # TODO: update the comment
+    def generate_queries(self, user_private_key, escrow_pubkey):
         """
         Generates queries for a given escrow account.
 
@@ -132,8 +133,8 @@ class SolanaGatewayClientProvider:
             response (requests.Response): The response object from the server.
         """
         payload = {
-            "escrow_pubkey": escrow_pubkey,
-            "user_private_key": user_private_key
+            "user_private_key": user_private_key,
+            "escrow_pubkey": escrow_pubkey
         }
         return self._send_request("generate_queries", method="POST", payload=payload)
 
@@ -150,13 +151,13 @@ class SolanaGatewayClientProvider:
         payload = {"escrow_pubkey": escrow_pubkey}
         return self._send_request("get_queries_by_escrow_pubkey", method="POST", payload=payload)
 
-    def prove(self, seller_private_key, escrow_pubkey, sigma, mu):
+    def prove(self, seller_private_key, escrow_public_key, sigma, mu):
         """
         Sends a prove request.
 
         Args:
             seller_private_key (str): The seller's private key.
-            escrow_pubkey (str): The escrow account public key.
+            escrow_public_key (str): The escrow account public key.
             sigma (str): The base64 encoded 48-byte value.
             mu (str): The mu value as a string.
 
@@ -165,8 +166,9 @@ class SolanaGatewayClientProvider:
         """
         payload = {
             "seller_private_key": seller_private_key,
-            "escrow_pubkey": escrow_pubkey,
+            "escrow_pubkey": escrow_public_key,
             "sigma": sigma,
             "mu": mu
         }
+
         return self._send_request("prove", method="POST", payload=payload)
