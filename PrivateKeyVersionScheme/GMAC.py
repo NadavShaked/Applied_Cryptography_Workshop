@@ -5,11 +5,12 @@ import os
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 
-NONCE_SIZE = 12
-GMAC_SIZE = 16
+BLOCK_SIZE: int = 1024
+NONCE_SIZE: int = 12
+GMAC_SIZE: int = 16
 
 
-def convert_index_to_bytes(index: int, max_bytes_size: int = 32):
+def convert_index_to_bytes(index: int, max_bytes_size: int = 32) -> bytes:
     """
     Converts an index into bytes with a specified maximum byte size.
 
@@ -25,14 +26,31 @@ def convert_index_to_bytes(index: int, max_bytes_size: int = 32):
     return index_in_bytes
 
 
-def process_file_with_gmac(file_path, block_size=1024):
+def process_file_with_gmac(file_path: str, block_size: int = 1024) -> (list[tuple[int, bytes, bytes]], bytes):
+    """
+    Processes a file and generates GMAC (Galois Message Authentication Code) for each block using AES-GCM.
+
+    Args:
+    - file_path (str): Path to the file to be processed.
+    - block_size (int): Size of each block to read from the file (default 1024 bytes).
+
+    Returns:
+    - list[tuple[int, bytes, bytes]]: List of tuples where each tuple contains:
+        - block number (int),
+        - nonce (bytes),
+        - block with appended GMAC (bytes).
+    - bytes: The randomly generated 256-bit AES key used for encryption.
+
+    Logs:
+    - Information and error logs during file processing.
+    """
     # Generate a random 256-bit (32-byte) AES key
-    key = os.urandom(32)
+    key: bytes = os.urandom(32)
 
     # Open the file for reading
     with open(file_path, "rb") as f:
-        blocks_with_mac = []  # To store blocks with appended GMAC
-        block_number = 0
+        blocks_with_mac: list[tuple[int, bytes, bytes]] = []  # To store blocks with appended GMAC
+        block_number: int = 0
 
         while True:
             # Read the next block
@@ -41,19 +59,19 @@ def process_file_with_gmac(file_path, block_size=1024):
                 break
 
             # Generate a random nonce (12 bytes recommended for AES-GCM)
-            nonce = os.urandom(NONCE_SIZE)
+            nonce: bytes = os.urandom(NONCE_SIZE)
 
             # Initialize AES-GCM
             aesgcm = AESGCM(key)
 
-            block_number_bytes = convert_index_to_bytes(block_number)
-            block_with_number = block + block_number_bytes
+            block_number_bytes: bytes = convert_index_to_bytes(block_number)
+            block_with_number: bytes = block + block_number_bytes
 
             # Generate GMAC (encrypt empty plaintext with block as AAD)
-            gmac_tag = aesgcm.encrypt(nonce, b"", block_with_number)
+            gmac_tag: bytes = aesgcm.encrypt(nonce, b"", block_with_number)
 
             # Append GMAC to the block
-            block_with_mac = block + gmac_tag
+            block_with_mac: bytes = block + gmac_tag
             blocks_with_mac.append((block_number, nonce, block_with_mac))
 
             # Increment block number
@@ -62,7 +80,17 @@ def process_file_with_gmac(file_path, block_size=1024):
     return blocks_with_mac, key  # Return processed blocks and the key for verification
 
 
-def write_blocks_to_file(blocks_with_mac, output_file):
+def write_blocks_to_file(blocks_with_mac: list[tuple[int, bytes, bytes]], output_file: str) -> None:
+    """
+    Writes processed blocks with GMAC to a new output file.
+
+    Args:
+    - blocks_with_mac (list[tuple[int, bytes, bytes]]): List of blocks, each containing:
+        - block number (int),
+        - nonce (bytes),
+        - block with appended GMAC (bytes).
+    - output_file (str): Path to the output file where the processed blocks will be written.
+    """
     # Write processed blocks with GMAC to a new file
     with open(output_file, "wb") as out_f:
         for _, nonce, block_with_mac in blocks_with_mac:
@@ -70,19 +98,33 @@ def write_blocks_to_file(blocks_with_mac, output_file):
             out_f.write(nonce + block_with_mac)
 
 
-def validate_block_with_gmac(block: bytes, block_index: int, key):
+def validate_block_with_gmac(block: bytes, block_index: int, key: bytes) -> bool:
+    """
+    Validates a block using GMAC (Galois/Counter Mode Authentication Code) for integrity and authenticity.
+
+    Args:
+    - block (bytes): The block to validate, which includes:
+        - nonce (12 bytes),
+        - data (the actual data),
+        - GMAC tag (last 16 bytes).
+    - block_index (int): The index of the block (used as additional authenticated data).
+    - key (bytes): The AES key used for the decryption and GMAC verification (256-bit key).
+
+    Returns:
+    - bool: True if the GMAC is valid and the block is authentic, False if the GMAC is invalid.
+    """
     # block (nonce + data + GMAC)
     # Extract the nonce (first 12 bytes)
-    nonce = block[:12]
+    nonce: bytes = block[:12]
 
     # Extract the data (everything in between)
-    data = block[12:-16]
+    data: bytes = block[12:-16]
 
     # Extract the GMAC (last 16 bytes)
-    gmac_tag = block[-16:]
+    gmac_tag: bytes = block[-16:]
 
-    index_in_bytes = convert_index_to_bytes(block_index)
-    data_with_index = data + index_in_bytes
+    index_in_bytes: bytes = convert_index_to_bytes(block_index)
+    data_with_index: bytes = data + index_in_bytes
 
     # Recompute GMAC for the block
     aesgcm = AESGCM(key)
@@ -94,15 +136,15 @@ def validate_block_with_gmac(block: bytes, block_index: int, key):
         return False
 
 
-def validate_file_with_gmac(file_path, key, block_size=1024):
+def validate_file_with_gmac(file_path: str, key: bytes, block_size: int = 1024):
     with open(file_path, "rb") as f:
-        block_index = 0
+        block_index: int = 0
         while True:
             # Read the next block (nonce + data + GMAC)
-            full_block = f.read(NONCE_SIZE + block_size + GMAC_SIZE)  # 12-byte nonce (IV), up-to 1024-byte data, 16-byte GMAC tag
+            full_block: bytes = f.read(NONCE_SIZE + block_size + GMAC_SIZE)  # 12-byte nonce (IV), up-to 1024-byte data, 16-byte GMAC tag
             if not full_block:
                 break  # End of file
-            isValid = validate_block_with_gmac(full_block, block_index, key)
+            isValid: bool = validate_block_with_gmac(full_block, block_index, key)
 
             if isValid:
                 print(f"Block {block_index} is authenticated.")
@@ -114,15 +156,14 @@ def validate_file_with_gmac(file_path, key, block_size=1024):
 
 
 # Example usage
-file_path = "../PoR.pdf"
-output_file = "../processed_with_gmac.txt"
-block_size = 1024
+example_file_path = "../PoR.pdf"
+example_output_file = "../processed_with_gmac.txt"
 
-blocks_with_mac, key = process_file_with_gmac(file_path, block_size)
-write_blocks_to_file(blocks_with_mac, output_file)
+example_blocks_with_mac, example_key = process_file_with_gmac(example_file_path, BLOCK_SIZE)
+write_blocks_to_file(example_blocks_with_mac, example_output_file)
 
-print(f"Processed file saved to {output_file}")
-print(f"AES Key (hex): {key.hex()}")
+print(f"Processed file saved to {example_output_file}")
+print(f"AES Key (hex): {example_key.hex()}")
 
 # Example usage
-validate_file_with_gmac(output_file, key)
+validate_file_with_gmac(example_output_file, example_key)

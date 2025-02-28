@@ -28,23 +28,42 @@ def bytes_needed(number: int) -> int:
 
 
 def secure_random_sample(maxIndex: int, number_of_indices: int) -> list[int]:
+    """
+    Generate a secure random sample of indices from a range.
+
+    :param maxIndex: The upper limit (exclusive) of the range of indices.
+    :param number_of_indices: The number of random indices to select.
+    :return: A list of randomly selected indices.
+    :raises ValueError: If the sample size is larger than the range.
+    """
+    # Check if the number of indices is greater than the available range
     if number_of_indices > maxIndex:
         raise ValueError("Sample size l cannot be larger than the range n.")
 
-    # Create a list of indices
+    # Create a list of indices from 0 to maxIndex - 1
     indices: list[int] = list(range(maxIndex))
 
-    # Shuffle the list using cryptographic randomness
+    # Shuffle the list using cryptographically secure randomness
     for i in range(len(indices) - 1, 0, -1):
-        j: int = secrets.randbelow(i + 1)  # Get a secure random index
+        # Get a secure random index to swap with
+        j: int = secrets.randbelow(i + 1)
+        # Swap the elements at positions i and j
         indices[i], indices[j] = indices[j], indices[i]
 
-    # Return the first `l` items
+    # Return the first `number_of_indices` - `l` items as the sample
     return indices[:number_of_indices]
 
 
 def write_file_by_blocks_with_authenticators(output_file: str, blocks_with_authenticators: list[tuple[bytes, bytes]]) -> None:
-    # Write processed blocks with authenticator to a new file
+    """
+    Write processed blocks along with their authenticators to a new file.
+
+    :param output_file: The path to the output file where the blocks will be written.
+    :param blocks_with_authenticators: A list of tuples, where each tuple contains
+                                        (data_block, authenticator).
+    :return: None
+    """
+    # Open the output file in write-binary mode
     with open(output_file, "wb") as out_f:
         for block_with_authenticator in blocks_with_authenticators:
             # Write data
@@ -54,8 +73,15 @@ def write_file_by_blocks_with_authenticators(output_file: str, blocks_with_authe
 
 
 def write_file_by_blocks(output_file: str, blocks: list[bytes]) -> None:
-    # Write processed blocks to a new file
+    """
+    Write processed blocks of data to a new file.
+
+    :param output_file: The path to the output file where the blocks will be written.
+    :param blocks: A list of data blocks (bytes) to be written to the file.
+    :return: None
+    """
+    # Open the output file in write-binary mode
     with open(output_file, "wb") as out_f:
         for block in blocks:
-            # Write data
+            # Write the current data block to the file
             out_f.write(block)

@@ -3,7 +3,7 @@ import hashlib
 import hmac
 
 
-SHA_256_BYTES_SIZE = 32
+SHA_256_BYTES_SIZE: int = 32
 
 
 def hmac_prf(k: int, index: int) -> int:

@@ -4,11 +4,13 @@ from hashlib import sha256
 
 # Third-party library imports
 import py_ecc.bls.hash_to_curve as bls_hash
+from py_ecc.bls.typing import G1Compressed, G2Compressed
 from py_ecc.fields import optimized_bls12_381_FQ
 import py_ecc.optimized_bls12_381 as bls_opt
 import py_ecc.bls.point_compression as bls_comp
 
-MAC_SIZE: int = 128 # TODO: verify max int in G group
+MAC_SIZE: int = 128
+MAC_SIZE_3D: int = 3 * MAC_SIZE    # 3d point authenticator tag
 BLOCK_SIZE: int = 1024
 
 p: int = bls_opt.curve_order    # The curve order is 52435875175126190479447740508185965837690552500527637822603658699938581184513
@@ -19,23 +21,48 @@ DST = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_"
 
 
 def generate_x() -> int:
+    """
+    Generate a secure random integer x as a private key.
+
+    :return: A randomly generated integer x within the range [0, p).
+    """
     x: int = secrets.randbelow(p)  # private key
     return x
 
 
-def generate_g() -> int:
-    rand_value = secrets.randbelow(p)
+def generate_g():
+    """
+    Generate a point on the elliptic curve G2 by multiplying the generator G2
+    by a securely generated random value.
+
+    :return: The resulting elliptic curve point g in the G2 group.
+    """
+    rand_value: int = secrets.randbelow(p)
     g = bls_opt.multiply(bls_opt.G2, rand_value)
     return g
 
 
 def generate_v(g, x: int):
+    """
+    Generate a point v on the elliptic curve G2 by multiplying a point g by
+    the private key x.
+
+    :param g: The elliptic curve point to be multiplied (typically generated from G2).
+    :param x: The private key (an integer) used for the multiplication.
+    :return: The resulting elliptic curve point v in the G2 group.
+    """
     v = bls_opt.multiply(g, x)  # v = g^x in G2
     return v
 
 
 def generate_u():
-    rand_value = secrets.randbelow(p)
+    """
+    Generate a point u on the elliptic curve G1 by multiplying the generator G1
+    by a securely generated random value.
+
+    :return: The resulting elliptic curve point u in the G1 group.
+    """
+    rand_value: int = secrets.randbelow(p)
     u = bls_opt.multiply(bls_opt.G1, rand_value)  # u in G1
     return u
 
@@ -122,12 +149,24 @@ def get_blocks_authenticators_by_file_path(
 
 
 def compress_g1_to_hex(g1_point) -> str:
-    g1_comp = bls_comp.compress_G1(g1_point)
-    g1_comp_as_bytes = g1_comp.to_bytes(48, 'big')
+    """
+    Compress a G1 point to a hexadecimal string representation.
+
+    :param g1_point: The G1 point (typically an elliptic curve point) to compress.
+    :return: A hexadecimal string representing the compressed G1 point.
+    """
+    g1_comp: G1Compressed = bls_comp.compress_G1(g1_point)
+    g1_comp_as_bytes: bytes = g1_comp.to_bytes(48, 'big')
     return g1_comp_as_bytes.hex()
 
 
 def compress_g2_to_hex(g2_point) -> str:
-    g2_comp = bls_comp.compress_G2(g2_point)
-    g2_comp_as_bytes = g2_comp[0].to_bytes(48, 'big') + g2_comp[1].to_bytes(48, 'big')
+    """
+    Compress a G2 point to a hexadecimal string representation.
+
+    :param g2_point: The G2 point (typically an elliptic curve point) to compress.
+    :return: A hexadecimal string representing the compressed G2 point.
+    """
+    g2_comp: G2Compressed = bls_comp.compress_G2(g2_point)
+    g2_comp_as_bytes: bytes = g2_comp[0].to_bytes(48, 'big') + g2_comp[1].to_bytes(48, 'big')
     return g2_comp_as_bytes.hex()
