@@ -25,7 +25,7 @@ file_name: str = "PoR.pdf"
 file_path: str = "../Files/" + file_name
 BLOCK_SIZE: int = 1024
 
-k: int = secrets.randbelow(100)  # TODO: Check what is the interval of values
+k: int = secrets.randbelow(100)
 α: FieldArray = GF(secrets.randbelow(p))
 
 # To store blocks with appended authenticator

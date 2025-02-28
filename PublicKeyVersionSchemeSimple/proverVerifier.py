@@ -39,7 +39,7 @@ output_file: str = "./EncodedFiles/" + file_name + ".encoded.txt"
 write_file_by_blocks_with_authenticators(output_file, blocks_with_authenticators)
 
 n: int = len(blocks_with_authenticators)
-l: int = secrets.randbelow(n)   # TODO: decide what is l - how many challenges the client sends
+l: int = secrets.randbelow(n)
 
 # Select random indices
 indices: list[int] = secure_random_sample(n, l)
