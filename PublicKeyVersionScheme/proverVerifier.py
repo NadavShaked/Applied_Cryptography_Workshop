@@ -11,7 +11,79 @@ import requests as requests
 # Local imports
 from Common.helpers import secure_random_sample, write_file_by_blocks_with_authenticators
 from helpers import get_blocks_authenticators_by_file_path, DST, HASH_INDEX_BYTES, p, MAC_SIZE, BLOCK_SIZE, generate_x, \
-    generate_g, generate_v, generate_u, compress_g1_to_hex, compress_g2_to_hex
+    generate_g, generate_v, generate_u, compress_g1_to_hex, compress_g2_to_hex, MAC_SIZE_3D
+
+
+def reverse_hex(hex_str):
+    # Remove the '0x' prefix if it exists
+    if hex_str.startswith("0x"):
+        hex_str = hex_str[2:]
+
+    # Ensure even length
+    if len(hex_str) % 2 != 0:
+        raise ValueError("Hex string length must be even")
+
+    # Convert hex string into bytes, reverse the bytes, and convert back to hex
+    reversed_hex = bytes.fromhex(hex_str)[::-1].hex()
+
+    return "0x" + reversed_hex  # Add back '0x' prefix for clarity
+
+mu_hex = '0xd04f4986c962a0c632d417e52eb4dcb29d9f1627ee32e893d19d844278c9dd67'
+mu_big_hex = reverse_hex(mu_hex)
+mu = int(mu_big_hex, 16) % p
+
+i = 2
+H_i = bls_hash.hash_to_G1(i.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256)  # H(i)
+print(compress_g1_to_hex(H_i))
+
+v_i_hex = '0x0000000000000000000000000000000000000000000000000000000000000007'
+v_i_hex = int(v_i_hex, 16) % p
+
+mul1 = bls_opt.multiply(H_i, v_i_hex)
+print(compress_g1_to_hex(mul1))
+
+i = 5
+H_i = bls_hash.hash_to_G1(i.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256)  # H(i)
+print(compress_g1_to_hex(H_i))
+
+v_i_hex = '0x0000000000000000000000000000000000000000000000000000000000000001'
+v_i_hex = int(v_i_hex, 16) % p
+
+mul2 = bls_opt.multiply(H_i, v_i_hex)
+print(compress_g1_to_hex(mul2))
+
+i = 1
+H_i = bls_hash.hash_to_G1(i.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256)  # H(i)
+print(compress_g1_to_hex(H_i))
+
+v_i_hex = '0x0000000000000000000000000000000000000000000000000000000000000006'
+v_i_hex = int(v_i_hex, 16) % p
+
+mul3 = bls_opt.multiply(H_i, v_i_hex)
+print(compress_g1_to_hex(mul3))
+
+add = bls_opt.add(mul1, mul2)
+add = bls_opt.add(add, mul3)
+print(compress_g1_to_hex(add))
+
+
+
+i = 6
+H_i = bls_hash.hash_to_G1(i.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256)  # H(i)
+print(compress_g1_to_hex(H_i))
+
+k = 32
+H_k = bls_hash.hash_to_G1(k.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256)  # H(i)
+print(compress_g1_to_hex(H_k))
+
+add = bls_opt.add(H_i, H_k)
+print(compress_g1_to_hex(add))
+
+g_hex = '0x0000000000000000000000000000000000000000000000000000000000000007'
+g = int(g_hex, 16) % p
+
+mul = bls_opt.multiply(add, g)
+print(compress_g1_to_hex(mul))
 
 file_name: str = "PoR.pdf"
 file_path: str = "../Files/" + file_name
@@ -43,17 +115,16 @@ coefficients: list[int] = [secrets.randbelow(p) for _ in range(l)]
 # Calculate the σ and μ
 with open(output_file, "rb") as f:
     block_index: int = 0
-    _3d_mac_size = MAC_SIZE * 3
 
     while True:
         # Read the next block (data + authenticator)
-        full_block: bytes = f.read(BLOCK_SIZE + _3d_mac_size)  # up-to 1024-byte data, 4-byte * 3 for 3d point authenticator tag
+        full_block: bytes = f.read(BLOCK_SIZE + MAC_SIZE_3D)  # up-to 1024-byte data, 4-byte * 3 for 3d point authenticator tag
         if not full_block:
             break  # End of file
 
-        m_i: int = int.from_bytes(full_block[:-_3d_mac_size], byteorder='big') % p
+        m_i: int = int.from_bytes(full_block[:-MAC_SIZE_3D], byteorder='big') % p
 
-        _3d_mac: bytes = full_block[-_3d_mac_size:]
+        _3d_mac: bytes = full_block[-MAC_SIZE_3D:]
         mac_x_coordinate: bytes = _3d_mac[0:MAC_SIZE]  # Bytes 0 - (MAC_SIZE - 1)
         mac_y_coordinate: bytes = _3d_mac[MAC_SIZE:2*MAC_SIZE]  # Bytes (MAC_SIZE) - (2 * MAC_SIZE - 1)
         mac_z_coordinate: bytes = _3d_mac[2*MAC_SIZE:3*MAC_SIZE]  # Bytes (2 * MAC_SIZE) - (3 * MAC_SIZE - 1)
@@ -103,16 +174,6 @@ right_pairing = bls_opt.pairing(v, multiplication_sum)   # e(Π(H(i)^(v_i)) * u^
 
 print(left_pairing.coeffs[0] == right_pairing.coeffs[0] and left_pairing.coeffs[1] == right_pairing.coeffs[1] and left_pairing.coeffs[2] == right_pairing.coeffs[2])
 
-g_comp = bls_comp.compress_G2(g)
-σ_comp = bls_comp.compress_G1(σ)
-v_comp = bls_comp.compress_G2(v)
-multiplication_sum_comp = bls_comp.compress_G1(multiplication_sum)
-
-g_comp_as_bytes = g_comp[0].to_bytes(48, 'big') + g_comp[1].to_bytes(48, 'big')
-σ_comp_as_bytes = σ_comp.to_bytes(48, 'big')
-v_comp_as_bytes = v_comp[0].to_bytes(48, 'big') + v_comp[1].to_bytes(48, 'big')
-multiplication_sum_comp_as_bytes = multiplication_sum_comp.to_bytes(48, 'big')
-
 # todo: delete the request
 # Create the JSON payload
 payload = {
@@ -120,6 +181,8 @@ payload = {
     "sigma_compressed": compress_g1_to_hex(σ),
     "v_compressed": compress_g2_to_hex(v),
     "multiplication_sum_compressed": compress_g1_to_hex(multiplication_sum),
+    "mu_sum_compressed": μ.to_bytes(32, 'little').hex(),
+    "u_compressed": compress_g1_to_hex(u)
 }
 
 # API endpoint

@@ -27,3 +27,6 @@ stim==1.14.0
 tqdm==4.67.1
 typing_extensions==4.12.2
 requests~=2.32.3
+reedsolo~=1.7.0
+flask~=3.1.0
+apscheduler~=3.11.0

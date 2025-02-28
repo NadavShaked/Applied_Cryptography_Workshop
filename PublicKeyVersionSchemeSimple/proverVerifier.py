@@ -2,13 +2,13 @@
 import secrets
 
 # Local imports
-from Common.primes import LOW_PRIME
+from Common.Constants.primes import LOW_PRIME
 from Common.helpers import secure_random_sample, write_file_by_blocks_with_authenticators
+from PublicKeyVersionScheme.helpers import MAC_SIZE, MAC_SIZE_3D
 from helpers import get_blocks_authenticators_by_file_path, add, multiply, hash, pairing
 
 
 p: int = LOW_PRIME
-MAC_SIZE: int = 128
 
 file_name: str = "PoR.pdf"
 file_path: str = "../Files/" + file_name
@@ -46,17 +46,16 @@ coefficients: list[int] = [secrets.randbelow(p) for _ in range(l)]
 # Calculate the σ and μ
 with open(output_file, "rb") as f:
     block_index: int = 0
-    _3d_mac_size = MAC_SIZE * 3
 
     while True:
         # Read the next block (data + authenticator)
-        full_block: bytes = f.read(BLOCK_SIZE + _3d_mac_size)  # up-to 1024-byte data, 4-byte * 3 for 3d point authenticator tag
+        full_block: bytes = f.read(BLOCK_SIZE + MAC_SIZE_3D)  # up-to 1024-byte data, 4-byte * 3 for 3d point authenticator tag
         if not full_block:
             break  # End of file
 
-        m_i: int = int.from_bytes(full_block[:-_3d_mac_size], byteorder='big') % p
+        m_i: int = int.from_bytes(full_block[:-MAC_SIZE_3D], byteorder='big') % p
 
-        _3d_mac: bytes = full_block[-_3d_mac_size:]
+        _3d_mac: bytes = full_block[-MAC_SIZE_3D:]
         mac_x_coordinate: bytes = _3d_mac[0:MAC_SIZE]  # Bytes 0 - (MAC_SIZE - 1)
         mac_y_coordinate: bytes = _3d_mac[MAC_SIZE:2*MAC_SIZE]  # Bytes (MAC_SIZE) - (2 * MAC_SIZE - 1)
         mac_b_coordinate: bytes = _3d_mac[2*MAC_SIZE:3*MAC_SIZE]  # Bytes (2 * MAC_SIZE) - (3 * MAC_SIZE - 1)
