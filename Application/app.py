@@ -143,9 +143,12 @@ def generate_ecc_file() -> None:
             print(f"Generated u (G1 point): {compress_g1_to_hex(u)}")
 
             # Process the file into blocks with cryptographic authenticators
-            blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(
-                file_path, BLOCK_SIZE, p, x, u, MAC_SIZE
-            )
+            blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path,
+                                                                                                           BLOCK_SIZE,
+                                                                                                           p,
+                                                                                                           x,
+                                                                                                           u,
+                                                                                                           MAC_SIZE)
             print(f"Total blocks with authenticators generated: {len(blocks_with_authenticators)}")
 
             # Write the processed blocks to the encoded file

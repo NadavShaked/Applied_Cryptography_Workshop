@@ -16,18 +16,23 @@ BLOCK_SIZE: int = 1024
 
 x: int = secrets.randbelow(p)    # private key
 
-G1 = 13
-G2 = 7
+G1: int = 13
+G2: int = 7
 
-rand_value_1 = secrets.randbelow(p)
+rand_value_1: int = secrets.randbelow(p)
 g = multiply(G2, rand_value_1)
 v = multiply(g, x)  # v = g^x in Z_p
 
-rand_value_2 = secrets.randbelow(p)
+rand_value_2: int = secrets.randbelow(p)
 u = multiply(G1, rand_value_2)  # u in Z_p
 
 # To store blocks with appended authenticator
-blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path, BLOCK_SIZE, p, x, u, MAC_SIZE)
+blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path,
+                                                                                               BLOCK_SIZE,
+                                                                                               p,
+                                                                                               x,
+                                                                                               u,
+                                                                                               MAC_SIZE)
 
 output_file: str = "./EncodedFiles/" + file_name + ".encoded.txt"
 

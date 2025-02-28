@@ -1,25 +1,27 @@
 # Local imports
+from Common.Constants.primes import LOW_PRIME
 from PrivateKeyVersionScheme.PRFs import hmac_prf
 
-p = 101
+
+p: int = LOW_PRIME
 
 
-def add(a, b):
+def add(a: int, b: int) -> int:
     """Perform addition in Z_p."""
     return (a + b) % p
 
 
-def multiply(a, n):
+def multiply(a: int, b: int) -> int:
     """Perform scalar multiplication in Z_p."""
-    return (a * n) % p
+    return (a * b) % p
 
 
-def pairing(a, b):
+def pairing(a: int, b: int) -> int:
     """Perform pairing operation in Z_p."""
     return (a * b) % p
 
 
-def hash(index):
+def hash(index: int) -> int:
     return hmac_prf(3, index) % p
 
 
@@ -54,13 +56,13 @@ def get_blocks_authenticators_by_file_path(
 
             block_in_z_p: int = int.from_bytes(block, byteorder='big') % p
 
-            u_m_i = multiply(u, block_in_z_p)
+            u_m_i: int = multiply(u, block_in_z_p)  # u^(m_i)
 
-            H_i = hash(block_index)  # H(i)
+            H_i: int = hash(block_index)  # H(i)
 
-            H_i_add_u_m_i = add(H_i, u_m_i)  # H(i) * u^(m_i)
+            H_i_add_u_m_i: int = add(H_i, u_m_i)  # H(i) * u^(m_i)
 
-            σ_i = multiply(H_i_add_u_m_i, x)  # [H(i) * u^(m_i)]^x
+            σ_i: int = multiply(H_i_add_u_m_i, x)  # [H(i) * u^(m_i)]^x
 
             σ_i_in_bytes: bytes = curve_field_element_to_bytes(σ_i, mac_size)
 

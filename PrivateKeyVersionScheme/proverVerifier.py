@@ -29,7 +29,12 @@ k: int = secrets.randbelow(100)  # TODO: Check what is the interval of values
 α: FieldArray = GF(secrets.randbelow(p))
 
 # To store blocks with appended authenticator
-blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path, α, BLOCK_SIZE, k, p, MAC_SIZE)
+blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path,
+                                                                                               α,
+                                                                                               BLOCK_SIZE,
+                                                                                               k,
+                                                                                               p,
+                                                                                               MAC_SIZE)
 
 output_file: str = "./EncodedFiles/" + file_name + ".encoded.txt"
 

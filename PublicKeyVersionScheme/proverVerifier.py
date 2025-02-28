@@ -5,7 +5,6 @@ from hashlib import sha256
 # Third-party library imports
 import py_ecc.bls.hash_to_curve as bls_hash
 import py_ecc.optimized_bls12_381 as bls_opt
-import py_ecc.bls.point_compression as bls_comp
 import requests as requests
 
 # Local imports
@@ -13,77 +12,6 @@ from Common.helpers import secure_random_sample, write_file_by_blocks_with_authe
 from helpers import get_blocks_authenticators_by_file_path, DST, HASH_INDEX_BYTES, p, MAC_SIZE, BLOCK_SIZE, generate_x, \
     generate_g, generate_v, generate_u, compress_g1_to_hex, compress_g2_to_hex, MAC_SIZE_3D
 
-
-def reverse_hex(hex_str):
-    # Remove the '0x' prefix if it exists
-    if hex_str.startswith("0x"):
-        hex_str = hex_str[2:]
-
-    # Ensure even length
-    if len(hex_str) % 2 != 0:
-        raise ValueError("Hex string length must be even")
-
-    # Convert hex string into bytes, reverse the bytes, and convert back to hex
-    reversed_hex = bytes.fromhex(hex_str)[::-1].hex()
-
-    return "0x" + reversed_hex  # Add back '0x' prefix for clarity
-
-mu_hex = '0xd04f4986c962a0c632d417e52eb4dcb29d9f1627ee32e893d19d844278c9dd67'
-mu_big_hex = reverse_hex(mu_hex)
-mu = int(mu_big_hex, 16) % p
-
-i = 2
-H_i = bls_hash.hash_to_G1(i.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256)  # H(i)
-print(compress_g1_to_hex(H_i))
-
-v_i_hex = '0x0000000000000000000000000000000000000000000000000000000000000007'
-v_i_hex = int(v_i_hex, 16) % p
-
-mul1 = bls_opt.multiply(H_i, v_i_hex)
-print(compress_g1_to_hex(mul1))
-
-i = 5
-H_i = bls_hash.hash_to_G1(i.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256)  # H(i)
-print(compress_g1_to_hex(H_i))
-
-v_i_hex = '0x0000000000000000000000000000000000000000000000000000000000000001'
-v_i_hex = int(v_i_hex, 16) % p
-
-mul2 = bls_opt.multiply(H_i, v_i_hex)
-print(compress_g1_to_hex(mul2))
-
-i = 1
-H_i = bls_hash.hash_to_G1(i.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256)  # H(i)
-print(compress_g1_to_hex(H_i))
-
-v_i_hex = '0x0000000000000000000000000000000000000000000000000000000000000006'
-v_i_hex = int(v_i_hex, 16) % p
-
-mul3 = bls_opt.multiply(H_i, v_i_hex)
-print(compress_g1_to_hex(mul3))
-
-add = bls_opt.add(mul1, mul2)
-add = bls_opt.add(add, mul3)
-print(compress_g1_to_hex(add))
-
-
-
-i = 6
-H_i = bls_hash.hash_to_G1(i.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256)  # H(i)
-print(compress_g1_to_hex(H_i))
-
-k = 32
-H_k = bls_hash.hash_to_G1(k.to_bytes(HASH_INDEX_BYTES, byteorder='big'), DST, sha256)  # H(i)
-print(compress_g1_to_hex(H_k))
-
-add = bls_opt.add(H_i, H_k)
-print(compress_g1_to_hex(add))
-
-g_hex = '0x0000000000000000000000000000000000000000000000000000000000000007'
-g = int(g_hex, 16) % p
-
-mul = bls_opt.multiply(add, g)
-print(compress_g1_to_hex(mul))
 
 file_name: str = "PoR.pdf"
 file_path: str = "../Files/" + file_name
@@ -96,14 +24,19 @@ v = generate_v(g, x)  # v = g^x in G2
 u = generate_u()  # u in G1
 
 # To store blocks with appended authenticator
-blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path, BLOCK_SIZE, p, x, u, MAC_SIZE)
+blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path,
+                                                                                               BLOCK_SIZE,
+                                                                                               p,
+                                                                                               x,
+                                                                                               u,
+                                                                                               MAC_SIZE)
 
 output_file: str = "./EncodedFiles/" + file_name + ".encoded.txt"
 
 write_file_by_blocks_with_authenticators(output_file, blocks_with_authenticators)
 
 n: int = len(blocks_with_authenticators)
-l: int = secrets.randbelow(n)   # TODO: decide what is l - how many challenges the client sends
+l: int = secrets.randbelow(n)
 
 # Select random indices
 indices: list[int] = secure_random_sample(n, l)
@@ -133,7 +66,9 @@ with open(output_file, "rb") as f:
         mac_y_coordinate_as_int = int.from_bytes(mac_y_coordinate, byteorder='big')
         mac_z_coordinate_as_int = int.from_bytes(mac_z_coordinate, byteorder='big')
 
-        σ_i = (bls_opt.FQ(mac_x_coordinate_as_int), bls_opt.FQ(mac_y_coordinate_as_int), bls_opt.FQ(mac_z_coordinate_as_int))
+        σ_i = (bls_opt.FQ(mac_x_coordinate_as_int),
+               bls_opt.FQ(mac_y_coordinate_as_int),
+               bls_opt.FQ(mac_z_coordinate_as_int))
 
         if block_index in indices:
             v_i: int = coefficients[indices.index(block_index)]
@@ -173,25 +108,3 @@ multiplication_sum = bls_opt.add(Π_H_i_multiply_v_i, u_μ)
 right_pairing = bls_opt.pairing(v, multiplication_sum)   # e(Π(H(i)^(v_i)) * u^μ, v)
 
 print(left_pairing.coeffs[0] == right_pairing.coeffs[0] and left_pairing.coeffs[1] == right_pairing.coeffs[1] and left_pairing.coeffs[2] == right_pairing.coeffs[2])
-
-# todo: delete the request
-# Create the JSON payload
-payload = {
-    "g_compressed": compress_g2_to_hex(g),
-    "sigma_compressed": compress_g1_to_hex(σ),
-    "v_compressed": compress_g2_to_hex(v),
-    "multiplication_sum_compressed": compress_g1_to_hex(multiplication_sum),
-    "mu_sum_compressed": μ.to_bytes(32, 'little').hex(),
-    "u_compressed": compress_g1_to_hex(u)
-}
-
-# API endpoint
-url = "http://127.0.0.1:3030/verify"
-
-# Send the POST request
-try:
-    response = requests.post(url, json=payload)
-    response.raise_for_status()
-    print("Response:", response.json())
-except requests.exceptions.RequestException as e:
-    print("An error occurred:", e)
