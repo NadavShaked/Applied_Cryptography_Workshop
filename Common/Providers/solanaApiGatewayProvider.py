@@ -110,6 +110,24 @@ class SolanaGatewayClientProvider:
 
         return self._send_request("end_subscription_by_buyer", method="POST", payload=payload)
 
+    def end_subscription_by_seller(self, seller_private_key, escrow_pubkey):
+        """
+        Ends the subscription process initiated by the seller for a given escrow account.
+
+        Args:
+            seller_private_key (str): The private key of the seller initiating the subscription termination.
+            escrow_pubkey (str): The public key of the escrow account associated with the subscription.
+
+        Returns:
+            response (requests.Response): The response object from the server indicating the success or failure of the subscription termination request.
+        """
+        payload = {
+            "seller_private_key": seller_private_key,
+            "escrow_pubkey": escrow_pubkey,
+        }
+
+        return self._send_request("end_subscription_by_seller", method="POST", payload=payload)
+
     def request_funds(self, user_private_key, escrow_pubkey):
         """
         Requests the release of funds from the escrow account.
