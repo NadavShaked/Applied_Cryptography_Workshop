@@ -15,8 +15,8 @@ from Common.helpers import write_file_by_blocks_with_authenticators, write_file_
 from Common.ReedSolomon.reedSolomon import encode_file_with_rs, decode_file_with_rs
 from Common.Constants.BLS12_381Constants import G1_COMPRESS_POINT_HEX_STRING_LENGTH, G2_COMPRESS_POINT_HEX_STRING_LENGTH
 from Common.Providers.solanaApiGatewayProvider import SolanaGatewayClientProvider
-from Common.Constants.solanaConstants import SOLANA_PRIVATE_KEY_BASE58_CHARACTERS_LEN, SOLANA_PUBLIC_KEY_BASE58_CHARACTERS_LEN
-
+from Common.Constants.SolanaConstants import SOLANA_PRIVATE_KEY_BASE58_CHARACTERS_LEN, \
+    SOLANA_PUBLIC_KEY_BASE58_CHARACTERS_LEN
 
 INCLUDES_REED_SOLOMON: bool = True
 
