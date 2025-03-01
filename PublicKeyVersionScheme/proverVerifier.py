@@ -5,12 +5,11 @@ from hashlib import sha256
 # Third-party library imports
 import py_ecc.bls.hash_to_curve as bls_hash
 import py_ecc.optimized_bls12_381 as bls_opt
-import requests as requests
 
 # Local imports
 from Common.helpers import secure_random_sample, write_file_by_blocks_with_authenticators
 from helpers import get_blocks_authenticators_by_file_path, DST, HASH_INDEX_BYTES, p, MAC_SIZE, BLOCK_SIZE, generate_x, \
-    generate_g, generate_v, generate_u, compress_g1_to_hex, compress_g2_to_hex, MAC_SIZE_3D
+    generate_g, generate_v, generate_u, MAC_SIZE_3D
 
 
 file_name: str = "PoR.pdf"

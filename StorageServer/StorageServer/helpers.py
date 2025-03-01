@@ -3,7 +3,6 @@ from PublicKeyVersionScheme.helpers import p, MAC_SIZE, BLOCK_SIZE, compress_g1_
 from .config import UPLOAD_FOLDER
 import py_ecc.optimized_bls12_381 as bls_opt
 import os
-
 from .constants import SELLER_PRIVATE_KEY
 
 
