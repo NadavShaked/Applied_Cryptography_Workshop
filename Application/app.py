@@ -143,7 +143,7 @@ def generate_ecc_file() -> None:
             print(f"Generated u (G1 point): {compress_g1_to_hex(u)}")
 
             # Process the file into blocks with cryptographic authenticators
-            blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(file_path,
+            blocks_with_authenticators: list[tuple[bytes, bytes]] = get_blocks_authenticators_by_file_path(encoded_file_path,
                                                                                                            BLOCK_SIZE,
                                                                                                            p,
                                                                                                            x,
@@ -230,13 +230,13 @@ def decode_ecc_file() -> None:
             print(f"Total blocks read: {len(blocks)}")
 
             # Write processed blocks of data to a new file
-            write_file_by_blocks(decoded_file_path, blocks)
-            print(f"File successfully written to {decoded_file_path}")
+            write_file_by_blocks(file_path, blocks)
+            print(f"File successfully written to {file_path}")
 
             # Decode using Reed-Solomon if applicable
             if INCLUDES_REED_SOLOMON:
                 print("Reed-Solomon decoding enabled. Starting RS decoding...")
-                decode_file_with_rs(decoded_file_path, decoded_file_path)
+                decode_file_with_rs(file_path, decoded_file_path)
                 print("Reed-Solomon decoding completed.")
 
             messagebox.showinfo("Success", f"Decoded File Saved to {decoded_file_path}")
