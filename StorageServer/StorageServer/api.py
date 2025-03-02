@@ -1,16 +1,114 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request, send_file
+
+from BLS12_381.helpers import p, MAC_SIZE, BLOCK_SIZE, compress_g1_to_hex, MAC_SIZE_3D
+import py_ecc.optimized_bls12_381 as bls_opt
+
+from .constants import SELLER_PRIVATE_KEY
 from .storage import save_file
 from datetime import datetime
 from .storage import files_details_dict
 from Common.ReedSolomon.reedSolomon import corrupt_file
-from flask import send_file
 from Common.Providers.solanaApiGatewayProvider import SolanaGatewayClientProvider
 from .config import UPLOAD_FOLDER
 import os
 
 
-# Create a Blueprint for the API in the StorageServer app
+# Create a Blueprint for the API in the StorageServer2 app
 api_bp = Blueprint('api', __name__)
+
+
+@api_bp.route('/api/get_files', methods=['GET'])
+def get_files_endpoint():
+    # Create a list to store the result
+    result = []
+
+    index: int = 0
+
+    files_details_dict2 = {
+        'file1.txt': {
+            'escrow_public_key': 'escrow_key_1',
+            'validate_every': 10,
+            'last_verify': datetime(2025, 3, 2, 12, 0, 0)
+        },
+        'file2.txt': {
+            'escrow_public_key': 'escrow_key_2',
+            'validate_every': 20,
+            'last_verify': datetime(2025, 3, 1, 14, 0, 0)
+        }
+    }
+
+    # Iterate over each file's details in the files_details_dict
+    for filename, file_details in files_details_dict.items():
+        # Extract necessary details
+        escrow_public_key = file_details.get("escrow_public_key")
+        validate_every = file_details.get("validate_every")
+        last_verify = file_details.get("last_verify")
+
+        # Ensure last_verify is converted to date
+        last_verify_date = last_verify.date() if isinstance(last_verify, datetime) else last_verify
+
+        # Append the file details to the result list
+        result.append({
+            "id": index,
+            "file_name": filename,
+            "escrow_public_key": escrow_public_key,
+            "validate_every": validate_every,
+            "last_verify": last_verify_date.isoformat()  # Convert to ISO format string for consistency
+        })
+
+        index += 1
+
+    # Iterate over each file's details in the files_details_dict
+    for filename, file_details in files_details_dict2.items():
+        # Extract necessary details
+        escrow_public_key = file_details.get("escrow_public_key")
+        validate_every = file_details.get("validate_every")
+        last_verify = file_details.get("last_verify")
+
+        # Ensure last_verify is converted to date
+        last_verify_date = last_verify.date() if isinstance(last_verify, datetime) else last_verify
+
+        # Append the file details to the result list
+        result.append({
+            "id": index,
+            "file_name": filename,
+            "escrow_public_key": escrow_public_key,
+            "validate_every": validate_every,
+            "last_verify": last_verify_date.isoformat()  # Convert to ISO format string for consistency
+        })
+
+        index += 1
+
+    # Return the list of files in JSON format
+    return jsonify({
+        "data": {
+            "storageFiles": result
+        }
+    })
+
+
+
+
+@api_bp.route('/api/delete_files', methods=['GET'])
+def delete_files_endpoint():
+    filename = request.args.get("filename")
+
+    if not filename:
+        return jsonify({"error": "Filename not provided"}), 400  # Bad Request if filename is missing
+
+    # Check if the file exists in the dict before trying to remove it
+    if filename not in files_details_dict:
+        return jsonify({"error": f"File {filename} not found"}), 404  # Not Found if the file doesn't exist
+
+    # Todo: request funds from sub (implement this if needed)
+
+    # Remove the file entry
+    files_details_dict.pop(filename)
+
+    # Return success message in JSON format
+    return jsonify({
+        "message": "Deletion succeeded"
+    }), 200  # Success with status code 200
 
 
 @api_bp.route('/api/download', methods=['GET'])
@@ -227,3 +325,118 @@ def corrupt_file_endpoint():
 
     except Exception as e:
         return jsonify({"error": f"An error occurred during calculation: {str(e)}"}), 500
+
+
+def calculate_sigma_mu_and_prove(filename: str, escrow_public_key: str) -> bool:
+    """
+    Calculates the values of σ (sigma) and μ (mu) based on the provided file and escrow public key,
+    and sends a proof request to the Solana gateway client.
+
+    This function:
+    - Retrieves queries from the Solana gateway for a specific escrow account.
+    - Processes the file by reading its blocks, extracting the relevant information, and calculating
+      the values of σ and μ using cryptographic operations.
+    - Sends the proof to the Solana gateway to verify the results.
+
+    Args:
+        filename (str): The name of the file containing the data to be processed.
+        escrow_public_key (str): The public key associated with the escrow account.
+
+    Returns:
+        bool: Returns True if the proof was successfully generated and verified, otherwise False.
+    """
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+
+    # Create client instance to interact with the Solana gateway
+    client = SolanaGatewayClientProvider()
+
+    # Fetch queries associated with the given escrow public key
+    generate_queries_response = client.generate_queries(SELLER_PRIVATE_KEY, escrow_public_key)
+
+    if 200 <= generate_queries_response.status_code < 300:
+        # Assuming generate_queries_response is the response from the GET query
+        generate_queries_response_json = generate_queries_response.json()
+
+        # Fetch the 'message' key's value (for logging or debugging purposes)
+        message = generate_queries_response_json.get("message")
+        print(message)
+    else:
+        return False
+
+    # Fetch existing queries associated with the escrow public key
+    get_queries_by_escrow_pubkey_response = client.get_queries_by_escrow(escrow_public_key)
+
+    if 200 <= get_queries_by_escrow_pubkey_response.status_code < 300:
+        # Assuming get_queries_response is the response from the GET query
+        get_queries_by_escrow_pubkey_response_json = get_queries_by_escrow_pubkey_response.json()
+
+        # Fetch the 'queries' key's value (list of queries)
+        queries = get_queries_by_escrow_pubkey_response_json.get("queries")
+    else:
+        return False
+
+    # Separate the indices and coefficients from the queries
+    indices = [query[0] for query in queries]
+    coefficients = [int(query[1], 16) for query in queries]
+
+    # Initialize the variables for σ and μ
+    σ = None
+    μ: int = 0
+
+    # Process the file to calculate σ and μ
+    with open(file_path, "rb") as f:
+        block_index: int = 0
+
+        while True:
+            # Read the next block (data + authenticator)
+            full_block: bytes = f.read(BLOCK_SIZE + MAC_SIZE_3D)  # up-to 1024-byte data, 4-byte * 3 for 3d point authenticator tag
+            if not full_block:
+                break  # End of file
+
+            # Extract m_i from the block data
+            m_i: int = int.from_bytes(full_block[:-MAC_SIZE_3D], byteorder='big') % p
+
+            # Extract 3D MAC (x, y, z coordinates)
+            _3d_mac: bytes = full_block[-MAC_SIZE_3D:]
+            mac_x_coordinate: bytes = _3d_mac[0:MAC_SIZE]  # Bytes 0 - (MAC_SIZE - 1)
+            mac_y_coordinate: bytes = _3d_mac[MAC_SIZE:2 * MAC_SIZE]  # Bytes (MAC_SIZE) - (2 * MAC_SIZE - 1)
+            mac_z_coordinate: bytes = _3d_mac[2 * MAC_SIZE:3 * MAC_SIZE]  # Bytes (2 * MAC_SIZE) - (3 * MAC_SIZE - 1)
+
+            # Convert MAC coordinates to integers
+            mac_x_coordinate_as_int = int.from_bytes(mac_x_coordinate, byteorder='big')
+            mac_y_coordinate_as_int = int.from_bytes(mac_y_coordinate, byteorder='big')
+            mac_z_coordinate_as_int = int.from_bytes(mac_z_coordinate, byteorder='big')
+
+            # Create the σ_i tuple for the current block
+            σ_i = (bls_opt.FQ(mac_x_coordinate_as_int), bls_opt.FQ(mac_y_coordinate_as_int),
+                   bls_opt.FQ(mac_z_coordinate_as_int))
+
+            # If this block's index is part of the queries, calculate the corresponding values
+            if block_index in indices:
+                v_i: int = coefficients[indices.index(block_index)]
+                σ_i_power_v_i = bls_opt.multiply(σ_i, v_i)  # (σ_i)^(v_i)
+
+                # Aggregate the σ_i values
+                if σ is None:
+                    σ = σ_i_power_v_i
+                else:
+                    σ = bls_opt.add(σ, σ_i_power_v_i)
+
+                # Update μ with the corresponding value
+                v_i_multiply_m_i = (v_i * m_i) % p
+                μ = (μ + v_i_multiply_m_i) % p
+
+            block_index += 1
+
+    # Send the proof request to the Solana gateway
+    prove_response = client.prove(SELLER_PRIVATE_KEY, escrow_public_key, compress_g1_to_hex(σ), μ.to_bytes(32, 'big').hex())
+
+    if 200 <= prove_response.status_code < 300:
+        # Assuming prove_response is the response from the prove request
+        prove_response_json = prove_response.json()
+
+        # Fetch the 'queries' key's value (for logging or debugging purposes)
+        queries = prove_response_json.get("queries")
+        return True  # Return True to indicate the proof was successfully generated and verified
+    else:
+        return False  # Return False if the proof request failed

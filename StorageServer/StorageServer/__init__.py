@@ -2,9 +2,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 from flask import Flask
 import atexit
-from .api import api_bp
-from .helpers import delete_file_from_storage_server, end_subscription_by_seller, request_funds, get_escrow_data, \
-    calculate_sigma_mu_and_prove
+from .api import api_bp, calculate_sigma_mu_and_prove
+from .helpers import delete_file_from_storage_server, end_subscription_by_seller, request_funds, get_escrow_data
 from .storage import files_details_dict
 from flask_cors import CORS
 
@@ -19,7 +18,7 @@ def create_app():
     # Enable CORS for all routes (or customize as needed)
     CORS(app)
 
-    # Register the API Blueprint for the StorageServer app
+    # Register the API Blueprint for the StorageServer2 app
     app.register_blueprint(api_bp)
 
     # Initialize the scheduler (used to run jobs in the background)

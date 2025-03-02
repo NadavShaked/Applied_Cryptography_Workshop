@@ -31,7 +31,7 @@ pip install -r requirements.txt
 
 ## Curl Templates and Examples
 
-Example `curl` requests for all endpoints are available in the [`./curls`](./Curls) directory. You can use them to quickly test the API.
+Example `curl` requests for all endpoints are available in the [`./curls`](Curls) directory. You can use them to quickly test the API.
 
 ## API Endpoints
 

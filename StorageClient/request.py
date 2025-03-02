@@ -64,10 +64,10 @@ def download_file(file_name, save_path):
 
 if __name__ == "__main__":
     # Change this to the actual file path you want to upload
-    file_path = "/Users/nadavshaked/Code Projects/Pycharm Projects/Applied_Cryptography_Workshop/Files/PoR.pdf"
+    file_path = "/Users/nadavshaked/Downloads/aaaaa/bbb/PoR.pdf.encoded"
 
     # Step 1: Upload the file
-    uploaded_filename = upload_file(file_path, "7pbM6QCdgRU1LxVmyKpuSvYTR4VSXYbBkPYM25zDwASk")
+    uploaded_filename = upload_file(file_path, "HKb9t7sh26Cqbo41ueveBgocstSXGDzpnFVc3jxBcgqw")
 
     # Step 2: Corrupt the file
     # corrupt_file("PoR.pdf.encoded")
