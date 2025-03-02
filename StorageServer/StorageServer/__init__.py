@@ -6,6 +6,7 @@ from .api import api_bp
 from .helpers import delete_file_from_storage_server, end_subscription_by_seller, request_funds, get_escrow_data, \
     calculate_sigma_mu_and_prove
 from .storage import files_details_dict
+from flask_cors import CORS
 
 
 RUN_JOB_EVERY_IN_SECONDS: int = 20
@@ -14,6 +15,9 @@ RUN_JOB_EVERY_IN_SECONDS: int = 20
 def create_app():
     # Initialize the Flask app
     app = Flask(__name__)
+
+    # Enable CORS for all routes (or customize as needed)
+    CORS(app)
 
     # Register the API Blueprint for the StorageServer app
     app.register_blueprint(api_bp)
