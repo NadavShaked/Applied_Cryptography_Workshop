@@ -6,12 +6,13 @@ from datetime import datetime
 from flask import Blueprint, jsonify, request, send_file
 import py_ecc.optimized_bls12_381 as bls_opt
 
+
 # Local imports
 from .constants import SELLER_PRIVATE_KEY
 from .storage import save_file
 from .storage import files_details_dict
-from Common.ReedSolomon.reedSolomon import corrupt_file
-from Common.Providers.solanaApiGatewayProvider import SolanaGatewayClientProvider
+from .Common.Providers.solanaApiGatewayProvider import SolanaGatewayClientProvider
+from .Common.ReedSolomon.reedSolomon import corrupt_file
 from .config import UPLOAD_FOLDER
 from .BLS12_381.helpers import p, MAC_SIZE, BLOCK_SIZE, compress_g1_to_hex, MAC_SIZE_3D
 
