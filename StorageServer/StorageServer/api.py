@@ -71,8 +71,8 @@ def get_files_endpoint():
     })
 
 
-@api_bp.route('/api/delete_files', methods=['GET'])
-def delete_files_endpoint():
+@api_bp.route('/api/delete_file', methods=['GET'])
+def delete_file_endpoint():
     """
     Endpoint to delete a specific file from the storage.
 

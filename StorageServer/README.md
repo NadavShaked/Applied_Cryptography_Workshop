@@ -76,6 +76,39 @@ Example `curl` requests for all endpoints are available in the [`./curls`](Curls
   ```json
   { "message": "The file 'example.txt' corrupted." }
   ```
+  
+### 5. **Get Files**
+- **Endpoint:** `/api/get_files`
+- **Method:** `GET`
+- **Description:** Retrieves a list of all stored files with their details such as escrow public key, validation frequency, and last verification date.
+- **Response:**
+```json
+{
+  "data": {
+    "storageFiles": [
+      {
+        "id": 0,
+        "file_name": "example.txt",
+        "escrow_public_key": "escrow_pubkey_here",
+        "validate_every": "30 days",
+        "last_verify": "2025-03-03T12:00:00"
+      },
+      ...
+    ]
+  }
+}
+```
+
+### 6. **Delete File**
+- **Endpoint:** `/api/delete_file`
+- **Method:** `GET`
+- **Description:** Deletes a specific file from the storage. Requires a query parameter filename.
+- **Parameters:**
+  - `filename`: The name of the file to delete.
+- **Response:**
+```json
+{ "message": "Deletion succeeded" }
+```
 
 ## Automated Validation System
 
