@@ -1,16 +1,19 @@
-from flask import Blueprint, jsonify, request, send_file
+# Standard library imports
+import os
+from datetime import datetime
 
-from BLS12_381.helpers import p, MAC_SIZE, BLOCK_SIZE, compress_g1_to_hex, MAC_SIZE_3D
+# Third-party library imports
+from flask import Blueprint, jsonify, request, send_file
 import py_ecc.optimized_bls12_381 as bls_opt
 
+# Local imports
 from .constants import SELLER_PRIVATE_KEY
 from .storage import save_file
-from datetime import datetime
 from .storage import files_details_dict
 from Common.ReedSolomon.reedSolomon import corrupt_file
 from Common.Providers.solanaApiGatewayProvider import SolanaGatewayClientProvider
 from .config import UPLOAD_FOLDER
-import os
+from ..BLS12_381.helpers import p, MAC_SIZE, BLOCK_SIZE, compress_g1_to_hex, MAC_SIZE_3D
 
 
 # Create a Blueprint for the API in the StorageServer2 app
@@ -19,90 +22,97 @@ api_bp = Blueprint('api', __name__)
 
 @api_bp.route('/api/get_files', methods=['GET'])
 def get_files_endpoint():
+    """
+    Endpoint to retrieve the list of stored files with their details.
+
+    This API endpoint iterates through the files stored in the `files_details_dict`
+    and retrieves details such as the file name, escrow public key, validation frequency,
+    and the last verification date. It returns a JSON response with all the necessary
+    file details, including an ID and formatted last verification date.
+
+    Returns:
+        JSON: A list of file details with each file's name, escrow public key,
+              validation frequency, and last verification date in ISO 8601 format.
+    """
+
     # Create a list to store the result
     result = []
 
+    # Initialize the index for each file
     index: int = 0
-
-    files_details_dict2 = {
-        'file1.txt': {
-            'escrow_public_key': 'escrow_key_1',
-            'validate_every': 10,
-            'last_verify': datetime(2025, 3, 2, 12, 0, 0)
-        },
-        'file2.txt': {
-            'escrow_public_key': 'escrow_key_2',
-            'validate_every': 20,
-            'last_verify': datetime(2025, 3, 1, 14, 0, 0)
-        }
-    }
 
     # Iterate over each file's details in the files_details_dict
     for filename, file_details in files_details_dict.items():
-        # Extract necessary details
+        # Extract necessary details from the file's details
         escrow_public_key = file_details.get("escrow_public_key")
         validate_every = file_details.get("validate_every")
         last_verify = file_details.get("last_verify")
 
-        # Ensure last_verify is converted to date
+        # Ensure `last_verify` is converted to date if it's a datetime object
         last_verify_date = last_verify.date() if isinstance(last_verify, datetime) else last_verify
 
         # Append the file details to the result list
         result.append({
-            "id": index,
-            "file_name": filename,
-            "escrow_public_key": escrow_public_key,
-            "validate_every": validate_every,
+            "id": index,  # Unique ID for each file in the response
+            "file_name": filename,  # Name of the file
+            "escrow_public_key": escrow_public_key,  # Public key associated with the escrow
+            "validate_every": validate_every,  # Frequency of validation for the file
             "last_verify": last_verify_date.isoformat()  # Convert to ISO format string for consistency
         })
 
-        index += 1
-
-    # Iterate over each file's details in the files_details_dict
-    for filename, file_details in files_details_dict2.items():
-        # Extract necessary details
-        escrow_public_key = file_details.get("escrow_public_key")
-        validate_every = file_details.get("validate_every")
-        last_verify = file_details.get("last_verify")
-
-        # Ensure last_verify is converted to date
-        last_verify_date = last_verify.date() if isinstance(last_verify, datetime) else last_verify
-
-        # Append the file details to the result list
-        result.append({
-            "id": index,
-            "file_name": filename,
-            "escrow_public_key": escrow_public_key,
-            "validate_every": validate_every,
-            "last_verify": last_verify_date.isoformat()  # Convert to ISO format string for consistency
-        })
-
+        # Increment the index for the next file
         index += 1
 
     # Return the list of files in JSON format
     return jsonify({
         "data": {
-            "storageFiles": result
+            "storageFiles": result  # Wrap the list of file details in a 'storageFiles' key
         }
     })
 
 
-
-
 @api_bp.route('/api/delete_files', methods=['GET'])
 def delete_files_endpoint():
+    """
+    Endpoint to delete a specific file from the storage.
+
+    This API endpoint accepts a query parameter `filename` to identify the file to be deleted.
+    If the filename is not provided or if the file does not exist in the `files_details_dict`,
+    appropriate error messages are returned. If the file is found, it is removed from the dictionary
+    and a success message is returned.
+
+    Query Parameters:
+        filename (str): The name of the file to be deleted.
+
+    Returns:
+        JSON: A message indicating the success or failure of the file deletion.
+    """
+
+    # Retrieve the filename from query parameters
     filename = request.args.get("filename")
 
+    # If filename is not provided, return a Bad Request error
     if not filename:
         return jsonify({"error": "Filename not provided"}), 400  # Bad Request if filename is missing
 
-    # Check if the file exists in the dict before trying to remove it
+    # Check if the file exists in the dictionary before trying to remove it
     if filename not in files_details_dict:
         return jsonify({"error": f"File {filename} not found"}), 404  # Not Found if the file doesn't exist
 
-    # Todo: request funds from sub (implement this if needed)
+    file_details = files_details_dict[filename]
 
-    # Remove the file entry
+    escrow_pubkey = file_details["escrow_public_key"]
+    # Initialize Solana client and get escrow data
+    client = SolanaGatewayClientProvider()
+
+    print("Starting request for funds from escrow using the Solana client.")
+
+    # Use the client to request funds by providing the seller's private key and the escrow public key
+    client.request_funds(SELLER_PRIVATE_KEY, escrow_pubkey)
+
+    print("Finished requesting funds from escrow using the Solana client.")
+
+    # Remove the file entry from the dictionary
     files_details_dict.pop(filename)
 
     # Return success message in JSON format
@@ -435,8 +445,13 @@ def calculate_sigma_mu_and_prove(filename: str, escrow_public_key: str) -> bool:
         # Assuming prove_response is the response from the prove request
         prove_response_json = prove_response.json()
 
-        # Fetch the 'queries' key's value (for logging or debugging purposes)
-        queries = prove_response_json.get("queries")
-        return True  # Return True to indicate the proof was successfully generated and verified
-    else:
-        return False  # Return False if the proof request failed
+        try:
+            # Fetch the 'message' from request body
+            message = prove_response_json.get("message")
+            if message == "Subscription extended successfully":
+                return True  # Return True to indicate the proof was successfully generated and verified
+        except Exception as e:
+            print(f"Exception occurred while parsing prove request: {str(e)}")
+            return False
+
+    return False  # Return False if the proof request failed

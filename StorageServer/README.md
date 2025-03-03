@@ -87,17 +87,57 @@ The Storage Server periodically validates stored files based on escrow contract 
 4. If the storage subscription is active, ensure there are sufficient funds for validation.
 5. Perform PoR validation (calculate `sigma` and `mu`) and update the last verification timestamp.
 
-## Running the Server
+## Running the Storage Server
+
+There are two ways to run the Storage Server:
+
+### 1. Run with Docker
+
+you can run the Storage Server via Docker. This option eliminates the need to install Python and dependencies manually. To do so:
+
+1. Build the Docker image:
+
+```sh
+docker build -t storage-server .
+```
+
+2. Run the Docker container:
+
+```sh
+docker run -p 8000:8000 storage-server
+```
+
+### 2. Run Manually
+
+To run the server manually, follow these steps:
 
 1. Install dependencies:
    ```sh
    pip install -r requirements.txt
    ```
+
 2. Run the server:
    ```sh
    python -m flask run
    ```
-3. The server will start at `http://127.0.0.1:5000/`
+
+The server will start at `http://127.0.0.1:8000/`
+
+## Updating the Solana Gateway URL
+
+In order to properly configure the Solana API Gateway URL, it is important to update the `SOLANA_GATEWAY_BASE_URL` in the [`solanaApiGatewayProvider.py`](../Common/Providers/solanaApiGatewayProvider.py) file.
+
+For running in **Docker**, use the following URL instead:
+```sh
+SOLANA_GATEWAY_BASE_URL: str = "http://host.docker.internal:3030"
+```
+
+For running **locally**, update the URL to:
+```sh
+SOLANA_GATEWAY_BASE_URL: str = "http://host.docker.internal:3030"
+```
+
+Ensure that you update this field correctly depending on whether you are running the application locally or inside a Docker container.
 
 ## Scheduled Job & Cleanup
 

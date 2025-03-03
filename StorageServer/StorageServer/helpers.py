@@ -1,6 +1,9 @@
+# Standard library imports
+import os
+
+# Local imports
 from Common.Providers.solanaApiGatewayProvider import SolanaGatewayClientProvider
 from .config import UPLOAD_FOLDER
-import os
 from .constants import SELLER_PRIVATE_KEY
 
 

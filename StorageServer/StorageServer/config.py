@@ -1,4 +1,7 @@
+# Standard library imports
 import os
+
+# Third-party library imports
 import shutil
 
 # Directory to save uploaded files

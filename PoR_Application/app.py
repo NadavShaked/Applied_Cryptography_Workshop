@@ -9,7 +9,7 @@ from enum import Enum
 from PIL import ImageTk, Image
 
 # Local imports
-from PublicKeyVersionScheme.helpers import get_blocks_authenticators_by_file_path, p, MAC_SIZE, BLOCK_SIZE, generate_x, \
+from BLS_12_381.helpers import get_blocks_authenticators_by_file_path, p, MAC_SIZE, BLOCK_SIZE, generate_x, \
     generate_g, generate_v, generate_u, compress_g2_to_hex, compress_g1_to_hex, MAC_SIZE_3D
 from Common.helpers import write_file_by_blocks_with_authenticators, write_file_by_blocks
 from Common.ReedSolomon.reedSolomon import encode_file_with_rs, decode_file_with_rs
@@ -831,7 +831,7 @@ root.title("PoR - Crypto Course")
 root.geometry("800x500")
 root.resizable(False, False)
 icon_image = Image.open(
-    './Application/solana-sol-logo.ico')
+    './solana-sol-logo.ico')
 icon = ImageTk.PhotoImage(icon_image)
 root.iconphoto(True, icon)
 

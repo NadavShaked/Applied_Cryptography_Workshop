@@ -1,11 +1,16 @@
-from apscheduler.schedulers.background import BackgroundScheduler
+# Standard library imports
 from datetime import datetime, timedelta
-from flask import Flask
 import atexit
+
+# Third-party library imports
+from apscheduler.schedulers.background import BackgroundScheduler
+from flask import Flask
+from flask_cors import CORS
+
+# Local imports
 from .api import api_bp, calculate_sigma_mu_and_prove
 from .helpers import delete_file_from_storage_server, end_subscription_by_seller, request_funds, get_escrow_data
 from .storage import files_details_dict
-from flask_cors import CORS
 
 
 RUN_JOB_EVERY_IN_SECONDS: int = 20
