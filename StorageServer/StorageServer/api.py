@@ -13,7 +13,7 @@ from .storage import files_details_dict
 from Common.ReedSolomon.reedSolomon import corrupt_file
 from Common.Providers.solanaApiGatewayProvider import SolanaGatewayClientProvider
 from .config import UPLOAD_FOLDER
-from ..BLS12_381.helpers import p, MAC_SIZE, BLOCK_SIZE, compress_g1_to_hex, MAC_SIZE_3D
+from .BLS12_381.helpers import p, MAC_SIZE, BLOCK_SIZE, compress_g1_to_hex, MAC_SIZE_3D
 
 
 # Create a Blueprint for the API in the StorageServer2 app
