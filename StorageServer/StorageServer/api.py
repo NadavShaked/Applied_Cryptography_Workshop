@@ -451,6 +451,7 @@ def calculate_sigma_mu_and_prove(filename: str, escrow_public_key: str) -> bool:
             # Fetch the 'message' from request body
             message = prove_response_json.get("message")
             if message == 'Proof submitted successfully':
+                print("The request proved successfully")
                 return True  # Return True to indicate the proof was successfully generated and verified
         except Exception as e:
             print(f"Exception occurred while parsing prove request: {str(e)}")
