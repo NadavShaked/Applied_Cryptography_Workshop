@@ -9,7 +9,7 @@ import py_ecc.optimized_bls12_381 as bls_opt
 
 # Local imports
 from .constants import SELLER_PRIVATE_KEY
-from .storage import save_file
+from .storage import save_file, remove_file
 from .storage import files_details_dict
 from .Common.Providers.solanaApiGatewayProvider import SolanaGatewayClientProvider
 from .Common.ReedSolomon.reedSolomon import corrupt_file
@@ -113,6 +113,7 @@ def delete_file_endpoint():
 
     print("Finished requesting funds from escrow using the Solana client.")
 
+    remove_file(filename, UPLOAD_FOLDER)
     # Remove the file entry from the dictionary
     files_details_dict.pop(filename)
 
@@ -449,7 +450,7 @@ def calculate_sigma_mu_and_prove(filename: str, escrow_public_key: str) -> bool:
         try:
             # Fetch the 'message' from request body
             message = prove_response_json.get("message")
-            if message == "Subscription extended successfully":
+            if message == 'Proof submitted successfully':
                 return True  # Return True to indicate the proof was successfully generated and verified
         except Exception as e:
             print(f"Exception occurred while parsing prove request: {str(e)}")

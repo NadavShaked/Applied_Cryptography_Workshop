@@ -14,7 +14,7 @@ from .storage import files_details_dict
 
 
 RUN_JOB_EVERY_IN_SECONDS: int = 20
-
+SOL_IN_LAMPORTS: int = 1000000000
 
 def create_app():
     # Initialize the Flask app
@@ -76,7 +76,7 @@ def create_app():
                     print(f"Escrow balance: {escrow_balance}, Prove cost: {prove_cost}")
 
                     # If there is enough balance, proceed with proving
-                    if escrow_balance >= prove_cost:
+                    if escrow_balance >= prove_cost * SOL_IN_LAMPORTS:
                         print(f"Enough balance, proving for file: {filename}")
                         is_proved = calculate_sigma_mu_and_prove(filename, escrow_public_key)
 
